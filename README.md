@@ -1,4 +1,4 @@
-# bawdash
+# Binance Agentic Wallet Dashboard
 
 Web dashboard for Binance Agentic Wallet (BAW) sessions and on-chain activity on BNB Smart Chain.
 
