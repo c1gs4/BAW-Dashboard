@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Binance Agentic Wallet · Operator Console</title>
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=3">
+<link rel="alternate icon" href="/favicon.ico">
+<link rel="apple-touch-icon" href="/static/favicon.svg?v=3">
+<style>
+  @font-face { font-family:'Urbanist'; src:url('/static/fonts/urbanist-latin-500-normal-CTXUkCRo.woff2') format('woff2'); font-weight:500; font-display:swap; }
+  @font-face { font-family:'Inter Tight'; src:url('/static/fonts/inter-tight-latin-400-normal-iW8qmuJY.woff2') format('woff2'); font-weight:400; font-display:swap; }
+  @font-face { font-family:'Inter Tight'; src:url('/static/fonts/inter-tight-latin-500-normal-BFXNXuvF.woff2') format('woff2'); font-weight:500; font-display:swap; }
+  @font-face { font-family:'Geist Mono'; src:url('/static/fonts/geist-mono-latin-400-normal-DTRLJnHl.woff2') format('woff2'); font-weight:400; font-display:swap; }
+
+  :root {
+    --black: #0d0d0c;
+    --canvas: #141413;
+    --panel: rgba(31, 30, 29, 0.82);
+    --panel-alt: rgba(38, 38, 36, 0.68);
+    --raised: rgba(48, 48, 46, 0.86);
+    --inset: rgba(20, 20, 19, 0.9);
+    --line: rgba(245, 244, 237, 0.08);
+    --line-strong: rgba(245, 244, 237, 0.15);
+    --text: #f5f4ed;
+    --sub: #c2bfb4;
+    --muted: #8a877d;
+    --bnb-yellow: #F0B90B;
+    --clay: #F0B90B;
+    --clay-soft: rgba(240, 185, 11, 0.14);
+    --positive: #8ab86b;
+    --negative: #e0736a;
+    --warning: #F0B90B;
+    --info: #7fa8c9;
+    --focus: #F0B90B;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --font-display: 'Urbanist', sans-serif;
+    --font-body: 'Inter Tight', sans-serif;
+    --font-mono: 'Geist Mono', monospace;
+  }
+  html[data-theme=light] {
+    --canvas: #faf9f5;
+    --panel: rgba(255, 255, 255, 0.9);
+    --panel-alt: rgba(245, 243, 238, 0.78);
+    --raised: rgba(240, 237, 231, 0.92);
+    --inset: rgba(248, 246, 241, 0.94);
+    --line: rgba(31, 30, 29, 0.1);
+    --line-strong: rgba(31, 30, 29, 0.18);
+    --text: #1f1e1d;
+    --sub: #4b4a45;
+    --muted: #6b6560;
+    --bnb-yellow: #D99B00;
+    --clay: #D99B00;
+    --clay-soft: rgba(217, 155, 0, 0.14);
+    --positive: #4f7a35;
+    --negative: #b2433a;
+    --warning: #D99B00;
+    --info: #2f6b8f;
+  }
+  * { box-sizing: border-box; font-synthesis: none; -webkit-font-smoothing: antialiased; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+  html { background: var(--canvas); }
+  body { margin:0; min-height:100vh; background:var(--canvas); color:var(--text); font:14px/1.5 var(--font-body); font-weight:400; }
+  h1,h2,h3 { margin:0; font-weight:500; }
+  button, input { font: inherit; color: inherit; }
+  .mono, .tabular { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .skip { position:absolute; left:-9999px; }
+  .skip:focus { left:14px; top:14px; z-index:100; padding:9px 14px; background:var(--clay); color:#fff; border-radius:10px; }
+
+  .app { min-height:100vh; position:relative; isolation:isolate; }
+  .grainient-shell { position:fixed; inset:0; z-index:-2; overflow:hidden; pointer-events:none; background:#0d0d0c; }
+  .grainient-shell canvas { width:100%; height:100%; display:block; opacity:.5; mix-blend-mode:screen; }
+  .grainient-shell::after { content:""; position:absolute; inset:0; background:radial-gradient(circle at 50% 20%, transparent 12%, rgba(13,13,12,.55) 62%, rgba(13,13,12,.92) 100%); }
+
+  .frame { width:100%; padding:16px clamp(18px,2.5vw,44px) 48px; }
+  .topbar { min-height:64px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:20px; }
+  .brand { justify-self:start; display:inline-flex; align-items:center; gap:12px; border:0; background:transparent; padding:0; color:var(--text); cursor:pointer; }
+  .brand > span { display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
+  .brand-mark { width:30px; height:30px; flex:none; }
+  .brand-word { font:600 20px/1.05 var(--font-display); letter-spacing:0.02em; display:block; text-align:left; margin:0; }
+  .brand-tag { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:block; text-align:left; margin-top:2px; }
+
+  .nav { justify-self:center; display:flex; gap:6px; padding:5px; border:1px solid var(--line-strong); background:var(--panel); backdrop-filter:blur(16px); border-radius:999px; }
+  .nav button { min-height:40px; border:0; padding:0 18px; display:flex; align-items:center; gap:8px; color:var(--muted); background:transparent; border-radius:999px; font-size:13px; font-weight:450; transition:color .18s, background-color .18s, transform .12s; }
+  .nav button:hover { color:var(--text); background:var(--raised); }
+  .nav button:active, .icon-button:active, .button:active { transform:scale(.97); }
+  .nav button[aria-current="page"] { background:var(--clay); color:#1f1e1d; font-weight:500; }
+  morph-icon { display:block; width:18px; height:18px; }
+
+  .top-actions { justify-self:end; display:flex; align-items:center; gap:8px; }
+  .live-clock-badge { display:inline-flex; align-items:center; gap:7px; padding:6px 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel); backdrop-filter:blur(14px); font-family:var(--font-mono); font-size:12px; color:var(--sub); }
+  .session-timer { gap:8px; height:38px; padding:0 14px; white-space:nowrap; flex:none; }
+  .session-timer .timer-label { font-family:var(--font-body); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .session-timer #session-countdown { font-size:12.5px; letter-spacing:.02em; white-space:nowrap; }
+  .session-timer[data-state=ok] .dot { background:var(--positive); }
+  .session-timer[data-state=warn] .dot { background:var(--warning); }
+  .session-timer[data-state=bad] .dot { background:var(--negative); }
+  .session-timer[data-state=unknown] .dot { background:var(--muted); }
+  .session-timer[data-state=ok] { border-color:rgba(138,184,107,.34); }
+  .session-timer[data-state=ok] #session-countdown { color:var(--text); }
+  .session-timer[data-state=warn] { border-color:rgba(212,162,76,.4); background:rgba(212,162,76,.09); }
+  .session-timer[data-state=warn] #session-countdown { color:var(--warning); }
+  .session-timer[data-state=bad] { border-color:rgba(224,115,106,.42); background:rgba(224,115,106,.1); }
+  .session-timer[data-state=bad] #session-countdown { color:var(--negative); }
+  .session-timer[data-state=unknown] #session-countdown { color:var(--muted); }
+  .icon-button { width:38px; height:38px; padding:0; border:1px solid var(--line-strong); border-radius:50%; background:var(--panel); backdrop-filter:blur(14px); display:flex; align-items:center; justify-content:center; color:var(--sub); cursor:pointer; transition:background-color .18s,border-color .18s,color .18s,transform .12s; }
+  .icon-button:hover { background:var(--raised); border-color:var(--clay); color:var(--text); }
+  .icon-button[aria-pressed="true"] { border-color:var(--bnb-yellow); color:var(--bnb-yellow); background:rgba(240,185,11,.12); }
+
+  /* Privacy blur mode */
+  html[data-privacy="true"] .privacy-blur {
+    filter: blur(7px) !important;
+    user-select: none !important;
+    transition: filter .18s ease;
+  }
+  html[data-privacy="true"] .privacy-blur:hover {
+    filter: blur(2px) !important;
+  }
+
+  .dot { width:7px; height:7px; border-radius:50%; flex:none; display:inline-block; background:var(--positive); position:relative; }
+  .dot.pulse::after { content:""; position:absolute; inset:-3px; border-radius:50%; border:1.5px solid var(--clay); animation:radar-ping 2.2s cubic-bezier(0,0,.2,1) infinite; }
+  @keyframes radar-ping { 0%{transform:scale(.9);opacity:.85} 70%,100%{transform:scale(3.2);opacity:0} }
+  .dot.warn { background:var(--warning); } .dot.bad { background:var(--negative); }
+
+  .view[hidden] { display:none !important; }
+  .view { animation:view-in .3s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes view-in { from { opacity:0; transform:translateY(8px); } }
+
+  .view-head { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; padding:34px 0 20px; }
+  .view-head h1 { font-size:clamp(26px,3vw,38px); line-height:1.1; font-weight:450; letter-spacing:-.025em; }
+  .view-head h1 span { color:var(--muted); font-weight:400; }
+  .head-copy { margin:8px 0 0; color:var(--sub); font-size:13.5px; max-width:70ch; }
+
+  .panel { border-radius:var(--radius); padding:22px; background:var(--panel); backdrop-filter:blur(18px); border:1px solid var(--line-strong); border-radius:var(--radius); box-shadow:0 12px 34px rgba(0,0,0,.32); }
+  .panel-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; min-height:34px; }
+  .panel-title { display:flex; align-items:center; gap:10px; color:var(--clay); }
+  .panel-title h2 { font-size:15px; color:var(--text); letter-spacing:-.01em; }
+  .section-label { font-size:11.5px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); }
+
+  .stage { position:relative; overflow:hidden; border-radius:var(--radius); background:var(--panel); backdrop-filter:blur(20px); border:1px solid var(--line-strong); box-shadow:0 18px 50px rgba(0,0,0,.4); display:grid; grid-template-columns:minmax(320px,1.05fr) minmax(420px,1.35fr); gap:32px; }
+  .stage-grain { position:absolute; inset:0; opacity:.55; pointer-events:none; }
+  .stage-grain canvas { width:100%; height:100%; display:block; }
+  .stage-grain::after { content:""; position:absolute; inset:0; background:linear-gradient(110deg, rgba(20,20,19,0.12) 0%, rgba(20,20,19,0.65) 50%, rgba(20,20,19,0.92) 100%); }
+  html[data-theme=light] .stage-grain { opacity:.24; mix-blend-mode:multiply; }
+  html[data-theme=light] .stage-grain::after { background:linear-gradient(110deg, rgba(255,225,80,.32) 0%, rgba(255,245,160,.18) 45%, rgba(255,255,255,.84) 100%); }
+  /* light theme: stage gets a vibrant, bright, luminous Binance gold sunshine gradient */
+  html[data-theme=light] .stage {
+    background:
+      radial-gradient(ellipse 80% 70% at 0% 0%, rgba(255, 208, 0, 0.48) 0%, rgba(255, 228, 85, 0.26) 50%, transparent 80%),
+      linear-gradient(125deg, rgba(255, 218, 54, 0.48) 0%, rgba(255, 238, 140, 0.3) 42%, rgba(255, 255, 255, 0.94) 88%);
+    border-color: rgba(240, 185, 11, 0.48);
+    box-shadow: 0 16px 42px rgba(240, 185, 11, 0.2), 0 4px 16px rgba(31, 30, 29, 0.05);
+  }
+  html[data-theme=light] .stage .allocation-header { color: #262420; font-weight: 650; }
+  html[data-theme=light] .stage .section-label, html[data-theme=light] .stage #freshness { color: #33302a; font-weight: 600; }
+  html[data-theme=light] .stage #stage-address { color: #141413; font-weight: 600; }
+  html[data-theme=light] .stage th { color: #33302a; font-weight: 600; }
+  html[data-theme=light] .stage td { color: #1f1e1d; }
+  html[data-theme=light] .stage .balance-sub { color: #403e38; }
+  html[data-theme=light] .stage .status-chip { background: rgba(255, 255, 255, 0.88); border-color: rgba(217, 155, 0, 0.38); color: #2e2c26; font-weight: 500; }
+  html[data-theme=light] .meter { background:rgba(31,30,29,.1); }
+  .stage-left, .stage-right { position:relative; z-index:1; padding:28px 32px; }
+  .stage-left { display:flex; flex-direction:column; justify-content:space-between; gap:22px; }
+  .stage-right { padding-left:0; display:flex; flex-direction:column; justify-content:flex-start; gap:12px; }
+  .allocation-header { display:flex; justify-content:space-between; align-items:center; gap:12px; font-size:12px; color:#d3d0c5; font-weight:500; letter-spacing:.06em; }
+  .copy-btn { width:26px; height:26px; padding:0; border:1px solid var(--line-strong); border-radius:8px; background:var(--inset); color:var(--sub); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; vertical-align:middle; transition:color .16s,border-color .16s,background-color .16s,transform .12s; }
+  .copy-btn svg { width:14px; height:14px; }
+  .copy-btn:hover { color:var(--clay); border-color:var(--clay); background:var(--raised); }
+  .copy-btn:active { transform:scale(.94); }
+  .copy-btn.copied { color:var(--positive); border-color:rgba(138,184,107,.45); }
+  .tok-icon { width:26px; height:26px; border-radius:50%; flex:none; object-fit:cover; background:var(--raised); border:1px solid var(--line-strong); }
+  .balance-main { display:flex; align-items:baseline; gap:14px; margin-top:6px; flex-wrap:wrap; }
+  .balance-main strong { font:500 clamp(30px,3vw,42px)/1 var(--font-mono); letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+  .balance-main .empty-val { font:450 24px/1.2 var(--font-body); color:var(--muted); }
+  .balance-sub { margin-top:14px; display:flex; gap:22px; flex-wrap:wrap; color:var(--sub); font-size:13px; }
+  .balance-sub span strong { color:var(--text); font-family:var(--font-mono); margin-left:5px; font-weight:400; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .status-chip { min-height:28px; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--line); border-radius:999px; background:var(--inset); color:var(--sub); font-size:12px; }
+  .status-chip[data-state=ok] { color:var(--positive); border-color:rgba(138,184,107,.3); }
+  .status-chip[data-state=warn] { color:var(--warning); border-color:rgba(212,162,76,.3); }
+  .status-chip[data-state=bad] { color:var(--negative); border-color:rgba(224,115,106,.3); }
+
+  /* stage surfaces sit on the warm grain layer -> lift small text contrast */
+  .stage .section-label, .stage .kv dt { color: #d3d0c5; }
+  .stage .status-chip { background: rgba(20,20,19,.72); border-color: rgba(245,244,237,.22); color: #e6e3d8; }
+  .stage .balance-sub, .stage #freshness { color: #d3d0c5; }
+  .button { min-height:44px; border:1px solid var(--line-strong); background:var(--panel-alt); border-radius:999px; padding:0 18px; display:inline-flex; align-items:center; justify-content:center; gap:8px; font-size:13px; font-weight:450; cursor:pointer; transition:background-color .16s,border-color .16s,transform .12s; }
+  .button:hover { background:var(--raised); border-color:var(--clay); }
+  .button.primary { background:var(--clay); border-color:var(--clay); color:#1f1e1d; font-weight:500; }
+  .button.danger { color:var(--negative); }
+  .button:disabled { opacity:.55; cursor:not-allowed; }
+
+  .kv { display:grid; grid-template-columns:1fr auto; gap:10px 16px; font-size:13px; }
+  .kv dt { color:var(--muted); }
+  .kv dd { margin:0; color:var(--text); font-family:var(--font-mono); font-size:12.5px; word-break:break-all; text-align:right; }
+
+  .meter { height:6px; border-radius:999px; background:var(--inset); overflow:hidden; border:1px solid var(--line); }
+  .meter i { display:block; height:100%; background:var(--clay); border-radius:999px; }
+
+  .nft-card { padding:0; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--line-strong); background:var(--panel); border-radius:var(--radius); transition:border-color .18s, transform .16s, box-shadow .18s; }
+  .nft-card.is-multi { cursor:pointer; }
+  .nft-card.is-multi:hover { border-color:var(--clay); transform:translateY(-3px); box-shadow:0 16px 40px rgba(0,0,0,0.45); }
+  .nft-card-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .nft-card-header h2 { font-size:16px; font-weight:500; color:var(--text); letter-spacing:-.01em; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .site-link-btn { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; background:#F0B90B; border:1px solid #F0B90B; color:#141413; font-size:11px; font-weight:700; letter-spacing:0.02em; text-decoration:none; transition:opacity .16s, transform .12s; flex:none; }
+  .site-link-btn svg { width:11px; height:11px; stroke:#141413; stroke-width:2.5; }
+  .site-link-btn:hover { opacity:0.88; transform:translateY(-1px); }
+  .view-multi-btn { margin-top:10px; width:100%; min-height:34px; padding:0 12px; border-radius:10px; border:1px solid rgba(240,185,11,.35); background:rgba(240,185,11,.1); color:var(--clay); font-size:12px; font-weight:500; display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; transition:background-color .16s, border-color .16s, color .16s; }
+  .view-multi-btn svg { width:13px; height:13px; transition:transform .16s; }
+  .view-multi-btn:hover { background:var(--clay); color:#1f1e1d; border-color:var(--clay); }
+  .view-multi-btn:hover svg { transform:translateX(3px); }
+
+  /* Floating Social & Coffee Dock */
+  .floating-dock { position:fixed; right:24px; bottom:24px; z-index:850; display:flex; align-items:center; gap:10px; }
+  .social-fab { width:42px; height:42px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; border:1px solid var(--line-strong); box-shadow:0 8px 24px rgba(0,0,0,.45); transition:transform .16s, box-shadow .16s, border-color .16s; }
+  .social-fab:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,.65); }
+  .social-fab svg { width:18px; height:18px; }
+  .fab-x { background:#0a0a0a; color:#fff; border-color:rgba(255,255,255,.2); }
+  .fab-x:hover { border-color:#fff; }
+  .fab-gh { background:#1b1f23; color:#f0f6fc; border-color:rgba(255,255,255,.2); }
+  .fab-gh:hover { border-color:#F0B90B; color:#F0B90B; }
+  .fab-coffee { background:#F0B90B; color:#141413; border-color:#F0B90B; border:0; }
+  .fab-coffee:hover { background:#ffd043; border-color:#ffd043; }
+
+  /* NFT Filter Tabs */
+  .nft-filter-bar { display:inline-flex; gap:4px; padding:4px; border-radius:999px; background:var(--panel); border:1px solid var(--line-strong); backdrop-filter:blur(14px); }
+  .filter-tab { min-height:34px; padding:0 14px; border-radius:999px; border:0; background:transparent; color:var(--muted); font-size:12.5px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:color .16s, background-color .16s; }
+  .filter-tab:hover { color:var(--text); }
+  .filter-tab.active { background:#F0B90B; color:#141413; font-weight:600; }
+  .filter-tab .badge-num { font-family:var(--font-mono); font-size:11px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.2); color:inherit; }
+  .filter-tab.active .badge-num { background:rgba(20,20,19,.25); }
+
+  /* PnL Card Styling */
+  .pnl-tag-btn { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; font-size:11.5px; font-family:var(--font-mono); font-weight:700; cursor:pointer; border:1px solid; transition:transform .12s, filter .16s; }
+  .pnl-tag-btn:hover { transform:scale(1.05); filter:brightness(1.15); }
+  .pnl-tag-btn svg { width:12px; height:12px; }
+  .pnl-tag-btn.pos { background:rgba(138,184,107,.15); border-color:#8ab86b; color:#8ab86b; }
+  .pnl-tag-btn.neut { background:rgba(240,185,11,.15); border-color:#F0B90B; color:#F0B90B; }
+
+  .pnl-dialog-card { width:min(1000px, 95vw) !important; max-width:96vw; max-height:none !important; height:auto; border-radius:26px; }
+  .pnl-dialog-card .modal-head { padding:14px 28px; }
+  .pnl-dialog-card .pnl-body { padding:12px 28px 16px; display:flex; flex-direction:column; align-items:center; width:100%; box-sizing:border-box; }
+  .pnl-card-art { width:100%; height:auto; aspect-ratio:16/9 !important; border-radius:22px; border:2px solid rgba(240,185,11,.45); background:linear-gradient(145deg, #181611 0%, #0d0c0a 100%); padding:24px 30px; box-shadow:0 32px 90px rgba(0,0,0,.75); display:flex; flex-direction:column; justify-content:space-between; position:relative; box-sizing:border-box; }
+  .pnl-card-art::before { content:""; position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at 80% 20%, rgba(240,185,11,.15) 0%, transparent 60%); }
+  .pnl-card-top { display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1; }
+  .pnl-card-hero { text-align:center; padding:0; position:relative; z-index:1; }
+  .pnl-hero-val { font:700 48px/1 var(--font-mono); letter-spacing:-.03em; color:#8ab86b; margin:3px 0 2px; text-shadow:0 0 28px rgba(138,184,107,.3); }
+  .pnl-hero-val.neut { color:#F0B90B; text-shadow:0 0 28px rgba(240,185,11,.3); }
+  .pnl-hero-roi { font:600 17px/1 var(--font-mono); color:#F0B90B; }
+  .pnl-stats-grid { display:grid !important; grid-template-columns:repeat(4,1fr) !important; gap:10px !important; position:relative; z-index:1; }
+  @media(max-width:640px) { .pnl-stats-grid { grid-template-columns:repeat(2,1fr); } }
+  .pnl-stat-box { background:rgba(20,20,19,.75); border:1px solid var(--line); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:3px; }
+  .pnl-stat-lbl { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+  .pnl-stat-box strong { font-size:15px; font-weight:600; color:var(--text); }
+  .pnl-card-tokens { display:grid !important; grid-template-columns:repeat(2,1fr) !important; gap:8px 16px !important; background:rgba(10,10,9,.5); border-radius:14px; padding:12px 16px; border:1px solid var(--line); font-size:12px; position:relative; z-index:1; }
+  @media(max-width:640px) { .pnl-card-tokens { grid-template-columns:1fr; } }
+  .pnl-card-bot { display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1.5px dashed rgba(245,244,237,.25) !important; font-size:11px; color:var(--muted); position:relative; z-index:1; }
+  .modal-foot { display:flex; justify-content:center; gap:18px; padding:16px 28px 22px; border-top:1px solid var(--line); background:var(--panel-alt); flex:none; }
+
+  /* PnL Card Theme Isolation: NEVER allow light mode to invert text colors inside the card */
+  .pnl-card-art { color:#f5f4ed !important; background:linear-gradient(145deg, #181611 0%, #0d0c0a 100%) !important; border-color:rgba(240,185,11,.45) !important; justify-content:space-between !important; }
+  .pnl-card-art * { color-scheme: dark !important; }
+  .pnl-card-art .pnl-card-top span, .pnl-card-art #pnl-art-date { color:#8a877d !important; }
+  .pnl-card-art #pnl-art-col { color:#8a877d !important; }
+  .pnl-card-art .pnl-stat-box { background:rgba(20,20,19,.85) !important; border-color:rgba(245,244,237,.14) !important; }
+  .pnl-card-art .pnl-stat-lbl { color:#8a877d !important; }
+  .pnl-card-art .pnl-stat-box strong { color:#f5f4ed !important; }
+  .pnl-card-art .pnl-card-tokens { background:rgba(10,10,9,.65) !important; border-color:rgba(245,244,237,.12) !important; color:#f5f4ed !important; }
+  .pnl-card-art .pnl-card-tokens span { color:#f5f4ed !important; }
+  .pnl-card-art .pnl-card-tokens a { color:#F0B90B !important; }
+  .pnl-card-art .pnl-card-bot, .pnl-card-art #pnl-art-wallet { color:#8a877d !important; }
+
+  /* Modal Popup */
+  .modal-backdrop { position:fixed; inset:0; z-index:1000; display:flex; justify-content:center; align-items:center; padding:20px 16px; background:rgba(10,10,9,.84); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); overflow-y:auto; }
+  .modal-backdrop[hidden] { display:none !important; }
+  .modal-card { width:min(900px,100%); max-height:min(90dvh,820px); display:flex; flex-direction:column; overflow:hidden; border-radius:24px; border:1px solid var(--line-strong); background:var(--panel); box-shadow:0 32px 90px rgba(0,0,0,0.65); animation:modal-in .25s cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes modal-in { from { opacity:0; transform:scale(0.96) translateY(14px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  .modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:20px 24px; border-bottom:1px solid var(--line); }
+  .modal-grid { flex:1; overflow-y:auto; padding:24px 26px; display:flex; flex-wrap:wrap; justify-content:center; gap:20px; }
+  .modal-item-card { width:240px; border-radius:var(--radius-sm); border:1px solid var(--line-strong); background:var(--inset); overflow:hidden; display:flex; flex-direction:column; transition:border-color .16s, transform .14s; }
+  .modal-item-card:hover { border-color:var(--clay); transform:translateY(-2px); box-shadow:0 12px 30px rgba(0,0,0,0.5); }
+  .modal-item-thumb { height:190px; width:100%; position:relative; overflow:hidden; background:#090908; display:grid; place-items:center; padding:8px; flex:none; }
+  .modal-item-thumb img { width:100%; height:100%; max-height:100%; object-fit:contain; display:block; border-radius:6px; }
+  .modal-item-fallback { font-size:12px; font-weight:500; color:var(--muted); font-family:var(--font-mono); }
+  .modal-item-info { padding:14px; display:flex; flex-direction:column; gap:5px; flex:1; border-top:1px solid var(--line); }
+  .modal-item-title { font-size:13.5px; font-weight:500; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .modal-item-id { font-size:11.5px; font-weight:500; color:#F0B90B; }
+  .modal-item-link { margin-top:auto; padding-top:6px; display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); text-decoration:none; }
+  .modal-item-link:hover { color:var(--clay); }
+  .nft-thumb { position:relative; aspect-ratio:1/1; overflow:hidden; display:grid; place-items:center; background:linear-gradient(150deg, rgba(240,185,11,.16), rgba(20,20,19,.92)); }
+  .nft-thumb img.nft-media { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
+  .nft-thumb .nft-fallback { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; color:var(--sub); }
+  .nft-thumb .nft-fallback b { font:500 13px var(--font-display); letter-spacing:.14em; color:var(--muted); }
+  .nft-thumb .nft-fallback i { font:500 12px var(--font-body); font-style:normal; letter-spacing:.12em; text-transform:uppercase; color:rgba(245,244,237,.8); }
+  .nft-thumb.empty { background:linear-gradient(150deg, rgba(240,185,11,.1), rgba(28,28,26,.95)); }
+  .nft-thumb .nft-fallback::before { content:""; width:30px; height:30px; border:1.5px dashed rgba(245,244,237,.38); border-radius:9px; }
+  .nft-thumb img.nft-media + .nft-fallback { display:none; }
+  .nft-body { padding:16px 18px 18px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .nft-body h2 { font-size:15.5px; line-height:1.3; letter-spacing:-.01em; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .nft-body a.mono { font-size:11.5px; color:var(--muted); text-decoration:none; }
+  .nft-body a.mono:hover { color:var(--clay); }
+  .nft-body p { margin:2px 0 0; font-size:11.5px; line-height:1.45; color:var(--muted); overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .nft-count { margin-top:auto; padding-top:10px; display:flex; align-items:baseline; gap:7px; }
+  .nft-count strong { font-size:22px; font-weight:500; line-height:1; }
+  .nft-count span { font-size:12px; color:var(--sub); }
+  .nft-count .nft-id { margin-left:auto; font-size:11px; color:var(--clay); text-decoration:none; }
+  .grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:20px; align-items:stretch; }
+  .grid-2 > .panel { display:flex; flex-direction:column; min-height:0; }
+  .grid-2 > .panel .table-scroll { overflow-y:auto; }
+  .grid-3 { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; margin-top:20px; }
+
+  /* Horizontal single row for overview NFT cards */
+  .overview-nft-row {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:14px;
+    width:100%;
+    align-items:stretch;
+  }
+  @media(min-width:1200px) {
+    .overview-nft-row { grid-template-columns:repeat(4, 1fr); }
+  }
+  .overview-nft-row .nft-card { min-width:0; }
+  .overview-nft-row .nft-thumb { aspect-ratio:16/10; max-height:160px; }
+  .overview-nft-row .nft-body { padding:12px 14px 14px; gap:4px; }
+  .overview-nft-row .nft-body h2 { font-size:14px; }
+  .overview-nft-row .nft-count { padding-top:6px; }
+  .overview-nft-row .nft-count strong { font-size:18px; }
+
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); font-weight:500; padding:0 12px 10px; }
+  td { padding:12px; border-top:1px solid var(--line); font-size:13px; color:var(--sub); vertical-align:middle; }
+  tbody tr + tr td { border-top:1px solid var(--line); }
+  tr:hover td { background:var(--panel-alt); }
+  td.wide { max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  td.num, th.num { text-align:right; font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .state { display:inline-flex; align-items:center; gap:6px; padding:3px 9px; border-radius:999px; font-size:11.5px; letter-spacing:.02em; border:1px solid var(--line-strong); color:var(--sub); }
+  .state.ok { color:var(--positive); border-color:rgba(138,184,107,.32); background:rgba(138,184,107,.1); }
+  .state.wait { color:var(--warning); border-color:rgba(212,162,76,.34); background:rgba(212,162,76,.1); }
+  .state.bad { color:#f08b82; border-color:rgba(240,139,130,.42); background:rgba(240,139,130,.12); }
+  .hash-link { color:var(--text); text-decoration:none; border-bottom:1px dotted var(--line-strong); }
+  .hash-link:hover { color:var(--clay); }
+  .sym { display:flex; align-items:center; gap:10px; color:var(--text); font-weight:500; }
+  .sym .glyph { width:28px; height:28px; border-radius:50%; background:var(--raised); border:1px solid var(--line-strong); display:grid; place-items:center; font-size:9.5px; letter-spacing:-.02em; font-family:var(--font-mono); color:var(--clay); flex:none; }
+  .empty-row td { text-align:center; color:var(--muted); padding:34px 12px; }
+  .pos { color:var(--positive); } .neg { color:var(--negative); }
+
+  .notice { position:fixed; top:84px; left:50%; transform:translate(-50%,-14px); z-index:10000; max-width:min(90vw,420px); padding:11px 18px; border-radius:999px; background:var(--raised); border:1px solid var(--line-strong); color:var(--text); font-size:13px; box-shadow:0 14px 40px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .18s, transform .25s cubic-bezier(.16,1,.3,1); }
+  .notice.show { opacity:1; transform:translate(-50%,0); }
+  .notice.error { border-color:rgba(224,115,106,.5); color:var(--negative); }
+
+  /* login gate */
+  .gate { position:fixed; inset:0; z-index:900; display:grid; place-items:center; padding:24px; background:rgba(13,13,12,.86); backdrop-filter:blur(14px); }
+  .gate[hidden] { display:none; }
+  .gate-card { width:min(440px,100%); max-height:96dvh; overflow:visible; padding:22px; border-radius:24px; border:1px solid var(--line-strong); background:var(--panel); box-shadow:0 30px 80px rgba(0,0,0,.6); text-align:center; }
+  :focus-visible { outline:2px solid var(--clay); outline-offset:2px; }
+  .gate-card h2 { font-size:19px; letter-spacing:-.02em; }
+  .gate-card p { color:var(--sub); font-size:12.5px; margin:8px 0 14px; }
+  .qr-shell { width:196px; height:196px; margin:0 auto 14px; padding:11px; border-radius:16px; background:#fff; display:grid; place-items:center; }
+  .qr-shell img { width:100%; height:100%; display:block; image-rendering:pixelated; }
+  .qr-shell.empty { background:var(--inset); border:1px solid var(--line-strong); color:var(--sub); font-size:12px; text-align:center; padding:22px; }
+  .pairing { display:inline-flex; align-items:center; gap:9px; font-family:var(--font-mono); font-size:18px; letter-spacing:.1em; color:var(--clay); margin:4px 0 2px; cursor:pointer; background:none; border:0; padding:4px 8px; border-radius:8px; }
+  .pairing:hover { background:var(--raised); }
+  .pairing .copy-hint { font-family:var(--font-body); font-size:10.5px; letter-spacing:.04em; color:var(--sub); text-transform:uppercase; border:1px solid var(--line-strong); border-radius:999px; padding:2px 8px; }
+  .pairing:hover { color:var(--text); }
+  .gate-steps { text-align:left; margin:16px 0 0; padding:0; list-style:none; display:grid; gap:7px; font-size:12px; color:var(--sub); }
+  .gate-steps li { display:flex; gap:10px; }
+  .gate-steps b { color:var(--clay); font-family:var(--font-mono); font-weight:400; }
+
+  .mobile-nav { display:none; }
+  .err-line { margin-top:14px; padding:10px 12px; border-radius:12px; border:1px solid rgba(224,115,106,.35); background:rgba(224,115,106,.08); color:var(--negative); font-size:12px; }
+
+  @media (max-width:1080px) {
+    .stage { grid-template-columns:1fr; }
+    .stage-right { padding:0 28px 26px; }
+    .grid-3 { grid-template-columns:1fr; }
+  }
+  @media (max-width:820px) {
+    .topbar { grid-template-columns:1fr auto; gap:12px; }
+    .nav { display:none; }
+    .top-actions .live-clock-badge { display:none; }
+    /* the session countdown is the one header readout worth keeping on mobile */
+    .top-actions { gap:6px; }
+    .top-actions #session-timer { display:inline-flex; height:34px; padding:0 10px; gap:6px; }
+    .top-actions #session-timer .timer-label { display:none; }
+    .top-actions #session-timer #session-countdown { font-size:11.5px; }
+    .top-actions .icon-button { width:34px; height:34px; }
+    .brand-word { font-size:17px; }
+    .brand-tag { font-size:9px; letter-spacing:.1em; }
+    .view-head { flex-direction:column; align-items:flex-start; }
+    .grid-2 { grid-template-columns:1fr; }
+    .frame { padding-bottom:96px; }
+    .mobile-nav { display:flex; position:fixed; left:14px; right:14px; bottom:14px; z-index:800; gap:6px; padding:6px; border-radius:999px; border:1px solid var(--line-strong); background:var(--panel); backdrop-filter:blur(18px); }
+    .mobile-nav button { flex:1; min-height:44px; border:0; border-radius:999px; background:transparent; color:var(--muted); display:flex; align-items:center; justify-content:center; gap:6px; font-size:12px; }
+    .mobile-nav button[aria-current=page] { background:var(--clay); color:#1f1e1d; }
+    .table-scroll { overflow-x:auto; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="notice" class="notice" role="status" aria-live="polite"></div>
+<div id="grainient-page" class="grainient-shell" aria-hidden="true"></div>
+
+<div id="gate" class="gate" hidden>
+  <div class="gate-card">
+    <h2 id="gate-title">Wallet session required</h2>
+    <p id="gate-copy">This host has no active signing session. A pairing QR is generated automatically.</p>
+    <div id="qr-shell" class="qr-shell empty" aria-live="polite">QR not generated yet</div>
+    <button id="pairing" class="pairing" type="button" title="Copy pairing code"></button>
+    <div id="gate-open" style="display:none;font-size:12.5px;color:var(--sub);margin-top:2px"></div>
+    <div id="gate-state" class="section-label" role="status" aria-live="polite">Waiting for login</div>
+    <button id="gate-login" class="button primary" style="margin-top:18px;width:100%">Generate login QR</button>
+    <ol class="gate-steps">
+      <li><b>01</b><span>Open Binance app → Wallet → Agentic Wallet.</span></li>
+      <li><b>02</b><span>Scan the QR and confirm the pairing code matches.</span></li>
+      <li><b>03</b><span>This console unlocks by itself once the session verifies.</span></li>
+    </ol>
+    <div id="gate-error" class="err-line" hidden></div>
+  </div>
+</div>
+
+<div id="nft-modal" class="modal-backdrop" hidden>
+  <div class="modal-card">
+    <header class="modal-head">
+      <div>
+        <div class="section-label">Collection details</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap;">
+          <h2 id="modal-title" style="margin:0;font-size:20px;font-weight:500;">Collection</h2>
+          <a id="modal-site" class="site-link-btn" href="#" target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Visit site ↗</span>
+          </a>
+        </div>
+        <div id="modal-sub" class="mono" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+      </div>
+      <button id="modal-close" class="icon-button" type="button" aria-label="Close modal">✕</button>
+    </header>
+    <div id="modal-grid" class="modal-grid"></div>
+  </div>
+</div>
+
+<!-- Realized PnL Card Modal -->
+<div id="pnl-modal" class="modal-backdrop" hidden>
+  <div class="modal-card pnl-dialog-card">
+    <header class="modal-head">
+      <div>
+        <div class="section-label">Realized NFT PnL</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <h2 id="pnl-modal-title" style="margin:0;font-size:20px;font-weight:600;">Collection PnL</h2>
+          <span class="status-chip" style="color:var(--positive);border-color:rgba(138,184,107,.4);">COMPLETED TRADE</span>
+        </div>
+        <div id="pnl-modal-sub" class="mono" style="margin-top:6px;font-size:12px;color:var(--muted);"></div>
+      </div>
+      <button id="pnl-modal-close" class="icon-button" type="button" aria-label="Close modal">✕</button>
+    </header>
+    
+    <div class="pnl-body">
+      <div id="pnl-card-art" class="pnl-card-art">
+        <div class="pnl-card-top">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" fill="#F0B90B" style="width:20px;height:20px;"><path d="M16.624 13.9202l2.7175 2.7154-7.353 7.353-7.353-7.352 2.7175-2.7164 4.6355 4.6595 4.6356-4.6595zm4.6366-4.6366L24 12l-2.7154 2.7164L18.5682 12l2.6924-2.7164zm-9.272.001l2.7163 2.6914-2.7164 2.7174v-.001L9.2721 12l2.7164-2.7154zm-9.2722-.001L5.4088 12l-2.6914 2.6924L0 12l2.7164-2.7164zM11.9885.0115l7.353 7.329-2.7174 2.7154-4.6356-4.6356-4.6355 4.6595-2.7174-2.7154 7.353-7.353z"/></svg>
+            <span style="font-weight:700;font-size:12px;letter-spacing:.08em;color:#F0B90B;">BINANCE AGENTIC WALLET</span>
+          </div>
+          <span class="mono" style="font-size:11px;color:var(--muted);" id="pnl-art-date"></span>
+        </div>
+        
+        <div class="pnl-card-hero">
+          <div style="font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:500;" id="pnl-art-col">COLLECTION</div>
+          <div class="pnl-hero-val privacy-blur" id="pnl-art-hero">+$11.21 USDT</div>
+          <div class="pnl-hero-roi" id="pnl-art-roi">+77.2% ROI</div>
+        </div>
+        <!-- 4 Stats in ONE horizontal row -->
+        <div class="pnl-stats-grid">
+          <div class="pnl-stat-box">
+            <span class="pnl-stat-lbl">TOTAL SOLD</span>
+            <strong class="mono" id="pnl-art-sold">4 NFTs</strong>
+          </div>
+          <div class="pnl-stat-box">
+            <span class="pnl-stat-lbl">GROSS REVENUE</span>
+            <strong class="mono privacy-blur" id="pnl-art-rev">$25.73 USDT</strong>
+          </div>
+          <div class="pnl-stat-box">
+            <span class="pnl-stat-lbl">ACQUISITION COST</span>
+            <strong class="mono privacy-blur" id="pnl-art-gas">$14.52 USDT</strong>
+          </div>
+          <div class="pnl-stat-box">
+            <span class="pnl-stat-lbl">NET PROFIT</span>
+            <strong class="mono privacy-blur" id="pnl-art-net" style="color:#8ab86b;">+$11.21 USDT</strong>
+          </div>
+        </div>
+
+        <div class="pnl-card-tokens" id="pnl-art-tokens"></div>
+
+        <div class="pnl-card-bot">
+          <span class="mono" id="pnl-art-wallet">xieball.ai</span>
+          <span style="font-size:10.5px;color:#F0B90B;font-weight:600;">Verified on-chain · BSC Mainnet</span>
+        </div>
+      </div>
+    </div>
+
+    <footer class="modal-foot">
+      <button class="button primary" id="btn-copy-pnl" type="button" onclick="copyPnlCard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6.5A2.5 2.5 0 0 0 4 5.5v6A2.5 2.5 0 0 0 6.5 14"/></svg>
+        <span>Copy PnL Card</span>
+      </button>
+      <button class="button" id="btn-download-pnl" type="button" onclick="downloadPnlCard()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>Download Card (PNG)</span>
+      </button>
+    </footer>
+  </div>
+</div>
+
+<!-- Donation Modal -->
+<div id="donation-modal" class="modal-backdrop" hidden>
+  <div class="modal-card" style="width:min(460px,100%);">
+    <header class="modal-head">
+      <div>
+        <div class="section-label">Support Operator</div>
+        <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;">☕ Buy XieBall a Coffee</h2>
+        <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">Support Binance Agentic Wallet dashboard & automation tooling</p>
+      </div>
+      <button id="donation-close" class="icon-button" type="button" aria-label="Close modal">✕</button>
+    </header>
+    <div style="padding:22px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;">
+      <div style="background:#fff;padding:12px;border-radius:16px;width:180px;height:180px;display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+        <img id="donate-qr-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAACj0lEQVR4nO2bQYrjMBBFX40FWcqQA/RR5BvMkfpMcwP7KDlAg7UM2PxZSHaShmamGbc7HkoLB5y3+FApSfWrYuIza/jxKRycd95555133vmPeKsrAHl9MBvk5btuRz3Ob8wnSdIIDC8TDC9Xsy6fBDSSJD3yX63H+Y14SvDSCKSxUX033r5oSpDLT6B/Nv3Of5pvVJPYAuq/X4/z2/KzkS4n2auuy6n7rXqc/wc+1M8oIAPEt2CAabBGBnBvgTybfuf/ih/MzKwF0uVUTl17HQGYy/V5Xz3Ob8SX/L3L0KHFgNkEEzWx99Pj/Ffw1uVa/6qH8rAOWOrf8Mh/tR7nt+JLGSRpqkVwH5c3pUgaG0GU10fH5O/jC2utO4J61nJYU+U8vofkzexUgqw+Xo1qaFxNkmTWrtv1c+p3/sNV8zJOZS9egrwmbKwmlufvIfk7G7IcvWukizVZjEv5+XtQfr0YzwaEieJPdhhD2wBxCpDbpYR6Nv3O/2HdmkMldXvWrB0XJvn96qj8Et+oh1vzLdKaapPB9+cj8nV/Tj1AFJY0G+nXSZY0VxM6jefJ9tHj/Lb87fwNGgwgn2UwG4M1gvhmJZ330eP8tvwa30YkzUHkYj0Hkc9YJebg8T00nwPW5ZOsA6zLAYZ2gQb3n4/Kr/6k1jGrOotDWjxp95+Py9/VR0Cj0j+qrQW4mRxeHx2ZX+cn7VWSdbG0fkulBHHCuj31OL8xn5cJ53rqNqWrwGBmfv7+R3y6mDG0IF0CEG/dw2/R4/y2/NCC+mxmXZyQLnUwq07KPr1+5x/W+/lJkc+TpbFFMAegmRh+7qbH+W359/fnajjHWinV/u9aPvn9+WC8+f+7nXfeeeedd353/jdkEM2NsR53MgAAAABJRU5ErkJggg==" alt="Donation address QR" style="width:100%;height:100%;image-rendering:pixelated;display:block;">
+      </div>
+      <div style="width:100%;">
+        <div class="section-label" style="font-size:10.5px;margin-bottom:6px;">BSC / EVM DONATION ADDRESS</div>
+        <div style="display:flex;align-items:center;gap:8px;background:var(--inset);padding:8px 12px;border-radius:10px;border:1px solid var(--line-strong);">
+          <span class="mono" style="font-size:12px;color:var(--text);word-break:break-all;text-align:left;flex:1;" id="donate-addr-val">0x64b861Be5C96b8247C5d13CB21e98aeb0a37E74D</span>
+          <button id="donate-copy-btn" class="copy-btn" type="button" title="Copy donation address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6.5A2.5 2.5 0 0 0 4 5.5v6A2.5 2.5 0 0 0 6.5 14"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="status-chip" style="color:#F0B90B;border-color:rgba(240,185,11,.3);font-size:11.5px;">Accepts BNB, USDT, USDC on BNB Chain</div>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="frame">
+    <header class="topbar">
+      <button class="brand" type="button" data-view="overview" aria-label="Agentic wallet overview">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="#F0B90B" aria-hidden="true"><path d="M16.624 13.9202l2.7175 2.7154-7.353 7.353-7.353-7.352 2.7175-2.7164 4.6355 4.6595 4.6356-4.6595zm4.6366-4.6366L24 12l-2.7154 2.7164L18.5682 12l2.6924-2.7164zm-9.272.001l2.7163 2.6914-2.7164 2.7174v-.001L9.2721 12l2.7164-2.7154zm-9.2722-.001L5.4088 12l-2.6914 2.6924L0 12l2.7164-2.7164zM11.9885.0115l7.353 7.329-2.7174 2.7154-4.6356-4.6356-4.6355 4.6595-2.7174-2.7154 7.353-7.353z"/></svg>
+        <span>
+          <span class="brand-word">BINANCE</span>
+          <span class="brand-tag" style="display:block">agentic wallet</span>
+        </span>
+      </button>
+      <nav class="nav" aria-label="Primary navigation">
+        <button data-view="overview" aria-current="page"><morph-icon data-icon="overview"></morph-icon><span>Overview</span></button>
+        <button data-view="tokens"><morph-icon data-icon="coins"></morph-icon><span>Tokens</span></button>
+        <button data-view="activity"><morph-icon data-icon="activity"></morph-icon><span>Activity</span></button>
+        <button data-view="nfts"><morph-icon data-icon="grid"></morph-icon><span>NFTs</span></button>
+      </nav>
+      <div class="top-actions">
+        <div class="live-clock-badge session-timer" id="session-timer" data-state="unknown" role="status" aria-live="polite" title="Time left on the Binance Agentic Wallet session">
+          <i class="dot" id="session-dot"></i>
+          <span class="timer-label">Session</span>
+          <span id="session-countdown" class="mono">--:--:--</span>
+        </div>
+        <div class="live-clock-badge" aria-label="Local time"><span id="live-time-str">--:--:--</span></div>
+        <button id="privacy-toggle" class="icon-button" aria-label="Toggle amount privacy" aria-pressed="false" title="Hide/blur balances & amounts"><morph-icon data-icon="eye"></morph-icon></button>
+        <button id="theme-toggle" class="icon-button" aria-label="Switch theme" aria-pressed="false"><morph-icon data-icon="theme"></morph-icon></button>
+        <button id="refresh" class="icon-button" aria-label="Refresh data"><morph-icon data-icon="refresh"></morph-icon></button>
+        <button id="logout" class="icon-button" aria-label="Sign out"><morph-icon data-icon="power"></morph-icon></button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- OVERVIEW -->
+      <section class="view" id="view-overview">
+        <div class="view-head">
+          <div>
+            <h1>Wallet <span id="handle-label">session</span></h1>
+            <p class="head-copy" id="overview-copy">Reading live balance, quota, and collection state from the Binance Agentic Wallet backend.</p>
+          </div>
+          <div class="chips">
+            <span class="status-chip" id="chip-session" data-state="warn"><i class="dot warn"></i>Session checking</span>
+            <span class="status-chip" id="chip-rpc" data-state="warn"><i class="dot warn"></i>BSC RPC checking</span>
+          </div>
+        </div>
+
+        <section class="stage">
+          <div id="grainient-stage" class="stage-grain" aria-hidden="true"></div>
+          <div class="stage-left">
+            <div>
+              <div class="section-label">Total balance · BSC</div>
+              <div class="balance-main">
+                <strong id="total-usd" class="empty-val privacy-blur">Not connected</strong>
+                <span class="status-chip" id="token-count">0 tokens</span>
+              </div>
+              <div class="balance-sub">
+                <span>Address<strong id="wallet-addr">--</strong></span>
+                <button id="copy-addr" class="copy-btn" type="button" aria-label="Copy wallet address" title="Copy address">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="11" height="11" rx="2.5"/>
+                    <path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6.5A2.5 2.5 0 0 0 4 5.5v6A2.5 2.5 0 0 0 6.5 14"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="section-label" id="freshness" style="margin-top:14px" role="status">Snapshot unavailable</div>
+            </div>
+            <div class="chips">
+              <span class="status-chip" id="chip-agent"><i class="dot"></i><span>Agent ID --</span></span>
+              <span class="status-chip" id="chip-quota"><i class="dot"></i><span>Quota --</span></span>
+              <span class="status-chip" id="chip-devmode"><i class="dot"></i><span>Dev mode --</span></span>
+            </div>
+          </div>
+          <div class="stage-right">
+            <div class="allocation-header">
+              <span>CHAIN BREAKDOWN · BSC</span>
+              <span class="status-chip" id="stage-token-count">--</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Asset</th><th class="num">Balance</th><th class="num">Value</th><th class="num">Share</th></tr></thead>
+                <tbody id="stage-holdings"><tr class="empty-row"><td colspan="4">Waiting for session</td></tr></tbody>
+              </table>
+            </div>
+            <div id="overview-errors" class="err-line" hidden></div>
+          </div>
+        </section>
+
+        <div class="grid-2">
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><morph-icon data-icon="coins"></morph-icon><h2>Top holdings</h2></div>
+              <span class="section-label" id="holdings-note">live</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Asset</th><th class="num">Balance</th><th class="num">Value</th></tr></thead>
+                <tbody id="top-holdings"><tr class="empty-row"><td colspan="3">Waiting for session</td></tr></tbody>
+              </table>
+            </div>
+            <div style="margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);border-top:1px dashed var(--line);">
+              <span>Non-zero BSC token assets</span>
+              <a href="javascript:void(0)" data-view="tokens" style="color:var(--clay);text-decoration:none;">View token details →</a>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div class="panel-title"><morph-icon data-icon="activity"></morph-icon><h2>Latest activity</h2></div>
+              <button class="button" data-view="activity" style="min-height:34px;padding:0 14px">View all</button>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Action</th><th>Asset</th><th class="num">Time</th></tr></thead>
+                <tbody id="top-activity"><tr class="empty-row"><td colspan="3">Waiting for session</td></tr></tbody>
+              </table>
+            </div>
+            <div style="margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);border-top:1px dashed var(--line);">
+              <span>Recent on-chain interactions</span>
+              <a href="javascript:void(0)" data-view="activity" style="color:var(--clay);text-decoration:none;">Full activity log →</a>
+            </div>
+          </section>
+        </div>
+
+        <!-- OVERVIEW NFT SECTION (Max 1 Row) -->
+        <section class="panel" style="margin-top:20px;">
+          <div class="panel-head" style="margin-bottom:12px;">
+            <div class="panel-title">
+              <morph-icon data-icon="grid"></morph-icon>
+              <h2>NFT Collections</h2>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span class="section-label" id="overview-nft-count">--</span>
+              <button class="button" data-view="nfts" style="min-height:32px;padding:0 14px;font-size:12px;">View all NFTs →</button>
+            </div>
+          </div>
+          <div class="overview-nft-row" id="overview-nft-row">
+            <div class="empty-row" style="color:var(--muted);text-align:center;padding:18px;width:100%;">Probing on-chain collections…</div>
+          </div>
+        </section>
+      </section>
+
+      <!-- TOKENS -->
+      <section class="view" id="view-tokens" hidden>
+        <div class="view-head">
+          <div>
+            <h1>Token <span>holdings</span></h1>
+            <p class="head-copy">Every non-zero token balance on Binance chain 56, priced by the wallet backend.</p>
+          </div>
+          <span class="status-chip privacy-blur" id="tokens-total">Total --</span>
+        </div>
+        <section class="panel">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Asset</th><th>Contract</th><th class="num">Balance</th><th class="num">Price</th><th class="num">Value</th></tr></thead>
+              <tbody id="tokens-body"><tr class="empty-row"><td colspan="5">Waiting for session</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- ACTIVITY -->
+      <section class="view" id="view-activity" hidden>
+        <div class="view-head">
+          <div>
+            <h1>Wallet <span>activity</span></h1>
+            <p class="head-copy">Transactions the agentic wallet backend reports for this account, newest first.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px"><span class="status-chip" id="activity-count">--</span><button id="activity-more" class="button">Load more</button></div>
+        </div>
+        <section class="panel">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Time</th><th>Type</th><th>Asset</th><th class="num">Gas fee</th><th>Status</th><th>Hash</th></tr></thead>
+              <tbody id="activity-body"><tr class="empty-row"><td colspan="6">Waiting for session</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <!-- NFTS -->
+      <section class="view" id="view-nfts" hidden>
+        <div class="view-head">
+          <div>
+            <h1>NFT <span>inventory</span></h1>
+            <p class="head-copy">Tracked ERC-721 collections on BSC with verified holding and sold PnL history.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div class="nft-filter-bar" role="group" aria-label="Filter collections">
+              <button class="filter-tab active" data-filter="all" type="button">All <span class="badge-num" id="cnt-all">0</span></button>
+              <button class="filter-tab" data-filter="hold" type="button">Hold <span class="badge-num" id="cnt-hold">0</span></button>
+              <button class="filter-tab" data-filter="sold" type="button">Sold <span class="badge-num" id="cnt-sold">0</span></button>
+            </div>
+            <span class="status-chip" id="nft-scan">--</span>
+          </div>
+        </div>
+        <div class="grid-3" id="nft-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" aria-label="Mobile navigation">
+    <button data-view="overview" aria-current="page"><morph-icon data-icon="overview"></morph-icon><span>Overview</span></button>
+    <button data-view="tokens"><morph-icon data-icon="coins"></morph-icon><span>Tokens</span></button>
+    <button data-view="activity"><morph-icon data-icon="activity"></morph-icon><span>Activity</span></button>
+    <button data-view="nfts"><morph-icon data-icon="grid"></morph-icon><span>NFTs</span></button>
+  </nav>
+</div>
+
+<script type="module">
+import { mountGrainient } from '/static/grainient.js';
+import { defineMorphIcon } from '/static/morphicons/element.js';
+
+defineMorphIcon();
+
+const ICONS = {
+  overview: [
+    ['rect', { x:'3', y:'3', width:'7', height:'7', rx:'1' }],
+    ['rect', { x:'14', y:'3', width:'7', height:'7', rx:'1' }],
+    ['rect', { x:'3', y:'14', width:'7', height:'7', rx:'1' }],
+    ['rect', { x:'14', y:'14', width:'7', height:'7', rx:'1' }]
+  ],
+  coins: [
+    ['ellipse', { cx:'12', cy:'6', rx:'8', ry:'3' }],
+    ['path', { d:'M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6' }],
+    ['path', { d:'M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6' }]
+  ],
+  activity: [['path', { d:'M3 12h4l2-7 4 14 2-7h6' }]],
+  grid: [
+    ['rect', { x:'3', y:'4', width:'18', height:'16', rx:'2' }],
+    ['circle', { cx:'8.5', cy:'9.5', r:'1.6' }],
+    ['path', { d:'m4 17 5-5 4 4 3-3 4 4' }]
+  ],
+  theme: [
+    ['circle', { cx:'12', cy:'12', r:'4' }],
+    ['path', { d:'M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41' }]
+  ],
+  eye: [
+    ['path', { d:'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z' }],
+    ['circle', { cx:'12', cy:'12', r:'3' }]
+  ],
+  eyeOff: [
+    ['path', { d:'M9.88 9.88a3 3 0 1 0 4.24 4.24' }],
+    ['path', { d:'M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68' }],
+    ['path', { d:'M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61' }],
+    ['line', { x1:'2', y1:'2', x2:'22', y2:'22' }]
+  ],
+  refresh: [
+    ['path', { d:'M21 12a9 9 0 1 1-3.5-7.1' }],
+    ['path', { d:'M21 3v6h-6' }]
+  ],
+  power: [
+    ['path', { d:'M12 3v9' }],
+    ['path', { d:'M6.4 6.4a8 8 0 1 0 11.2 0' }]
+  ]
+};
+
+document.querySelectorAll('morph-icon[data-icon]').forEach(el => {
+  el.icon = ICONS[el.dataset.icon];
+  el.spring = 'snappy';
+});
+
+const BNB_GOLD = '#F0B90B', DEEP = '#141413';
+
+mountGrainient(document.getElementById('grainient-page'), {
+  colors: [DEEP, '#1c1606', BNB_GOLD, '#2a2208', '#141413'], type: 'linear', angle: 40,
+  speed: 0.35, flow: 0.6, scale: 1.1, softness: 1, silk: 0.28,
+  grainAmount: 0.06, grainAnimated: true, contrast: 1.05, saturation: 1.05, intro: true
+});
+mountGrainient(document.getElementById('grainient-stage'), {
+  colors: [BNB_GOLD, '#261e08', '#382b08', '#141413'], type: 'linear', angle: 48,
+  speed: 0.35, flow: 0.6, scale: 1.1, softness: 1, silk: 0.3,
+  grainAmount: 0.06, grainAnimated: true, contrast: 1.05, saturation: 1.05, intro: true
+});
+
+const state = { session: null, overview: null, activity: [], cursor: null, nfts: null, polling: null, view: 'overview', nftFilter: 'all' };
+window.state = state;
+const $ = (id) => document.getElementById(id);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function notify(msg, isError = false) {
+  const el = $('notice');
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+  el.classList.add('show');
+  clearTimeout(notify._t);
+  notify._t = setTimeout(() => el.classList.remove('show'), 3800);
+}
+
+const tokenGlyph = (t) => {
+  const letter = esc((t.symbol || '?').slice(0, 3).toUpperCase());
+  if (t.icon) {
+    return `<img class="tok-icon" src="${esc(t.icon)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'glyph',textContent:'${letter}'}))">`;
+  }
+  return `<span class="glyph">${letter}</span>`;
+};
+
+const groupCode = (code) => !code ? '' : String(code).replace(/(.{3})(?=.)/g, '$1 ');
+const usd = (v) => '$' + (Number(v) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const usdSoft = (v) => {
+  const n = Number(v) || 0;
+  return n > 0 && n < 0.01 ? '<$0.01' : usd(n);
+};
+/* no price feed => value is unknown, not zero */
+const valueCell = (price, value) =>
+  !(Number(price) > 0) && !(Number(value) > 0) ? '--' : usdSoft(value);
+const num = (v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return String(v ?? '--');
+  if (n === 0) return '0';
+  if (Math.abs(n) >= 1000) return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  if (Math.abs(n) >= 1) return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  return n.toPrecision(6).replace(/0+$/, '');
+};
+const shortAddr = (a, head = 6, tail = 4) => !a ? '--' : (a.length <= head + tail + 3 ? a : `${a.slice(0, head)}…${a.slice(-tail)}`);
+const when = (iso) => {
+  if (!iso) return '--';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '--';
+  return d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+};
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, { headers: { 'content-type': 'application/json' }, ...opts });
+  let body = null;
+  try { body = await res.json(); } catch { body = null; }
+  if (!res.ok) {
+    const detail = body && body.detail;
+    const err = new Error(typeof detail === 'string' ? detail : (detail && detail.message) || `HTTP ${res.status}`);
+    err.status = res.status;
+    err.detail = detail;
+    throw err;
+  }
+  return body;
+}
+
+/* ------------------------------- gate ------------------------------- */
+function showGate(reason) {
+  $('gate').hidden = false;
+  document.body.style.overflow = 'hidden';
+  if (reason) $('gate-state').textContent = reason;
+}
+
+function setGateIntro(seenBefore) {
+  $('gate-title').textContent = seenBefore ? 'Agentic Wallet session expired' : 'Pair this host with your wallet';
+  $('gate-copy').textContent = seenBefore
+    ? 'The signing session on this host ended. Generate a QR and approve it in the Binance app.'
+    : 'No signing session exists on this host yet. Generate a QR and approve it in the Binance app.';
+}
+
+function hideGate() {
+  $('gate').hidden = true;
+  document.body.style.overflow = '';
+  if (state.polling) { clearInterval(state.polling); state.polling = null; }
+}
+
+function renderQr(qr) {
+  const shell = $('qr-shell');
+  shell.classList.remove('empty');
+  shell.innerHTML = `<img alt="Binance pairing QR" src="${qr.png}">`;
+  $('pairing').innerHTML = `<span>${esc(groupCode(qr.pairingCode))}</span><span class="copy-hint">copy</span>`;
+  $('gate-copy').textContent = 'Scan this QR in the Binance app and approve the pairing.';
+  const exp = qr.expireAt ? new Date(Number(qr.expireAt)) : null;
+  $('gate-state').textContent = exp ? `Expires ${exp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })} · waiting for scan` : 'Waiting for scan';
+  $('gate-title').textContent = 'Pair this host';
+  const open = $('gate-open');
+  if (qr.urlForWeb) {
+    open.style.display = 'block';
+    open.innerHTML = `No camera? <a href="${esc(qr.urlForWeb)}" target="_blank" rel="noreferrer" style="color:var(--clay);text-decoration:underline">Open the pairing link on your device</a>`;
+  }
+  $('gate-login').textContent = 'Regenerate QR';
+  $('gate-login').classList.remove('primary');
+  $('gate-login').style.background = 'transparent';
+}
+
+async function requestQr() {
+  const btn = $('gate-login');
+  btn.disabled = true;
+  $('gate-error').hidden = true;
+  try {
+    const qr = await api('/api/login', { method: 'POST' });
+    if (qr.already) { await boot(); return; }
+    $('gate-login').classList.add('primary');
+    $('gate-login').style.background = '';
+    renderQr(qr);
+    pollAuth();
+  } catch (err) {
+    $('gate-error').hidden = false;
+    $('gate-error').textContent = err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function pollAuth() {
+  if (state.polling) clearInterval(state.polling);
+  state.polling = setInterval(async () => {
+    try {
+      const s = await api('/api/session');
+      if (s.connected) { clearInterval(state.polling); state.polling = null; hideGate(); notify('Wallet session connected'); await boot(); return; }
+      const a = s.auth || {};
+      if (a.state === 'expired') {
+        clearInterval(state.polling); state.polling = null;
+        $('gate-state').textContent = 'QR expired';
+        $('qr-shell').classList.add('empty');
+        $('qr-shell').textContent = 'QR expired — generate a new one';
+        $('gate-copy').textContent = 'The previous QR expired. Generate a new one and approve it in the Binance app.';
+        $('gate-login').classList.add('primary');
+        $('gate-login').style.background = '';
+        $('gate-open').style.display = 'none';
+        $('pairing').textContent = '';
+      }
+    } catch { /* keep waiting */ }
+  }, 3000);
+}
+
+/* ----------------------------- rendering ---------------------------- */
+function setChip(id, okState, label) {
+  const el = $(id);
+  if (!el) return;
+  el.dataset.state = okState;
+  const dot = el.querySelector('.dot');
+  if (dot) dot.className = 'dot ' + (okState === 'ok' ? '' : okState === 'bad' ? 'bad' : 'warn');
+  const span = el.querySelector('span');
+  if (span) span.textContent = label; else el.textContent = label;
+}
+
+function renderOverview(data) {
+  state.overview = data;
+  const tokens = data.tokens || [];
+  $('total-usd').textContent = tokens.length ? usd(data.totalUsd) : '$0.00';
+  $('total-usd').classList.remove('empty-val');
+  $('token-count').textContent = `${tokens.length} token${tokens.length === 1 ? '' : 's'}`;
+  const primary = (data.addresses || []).find(a => Number(a.binanceChainId) === 56) || (data.addresses || [])[0];
+  state.overview.bscAddress = (primary && primary.address) || null;
+  $('wallet-addr').textContent = shortAddr(state.overview.bscAddress, 8, 6);
+  $('wallet-addr').title = state.overview.bscAddress || '';
+  $('freshness').textContent = `Snapshot ${when(data.fetchedAt)} · source: BAW CLI`;
+  const agentName = data.agentId && (data.agentId.agentId || data.agentId.handle || data.agentId.domain);
+  $('handle-label').textContent = agentName || 'session';
+  setChip('chip-agent', agentName ? 'ok' : 'warn', agentName ? `Agent ID ${agentName}` : 'Agent ID not claimed');
+  const quota = data.quota || {};
+  const left = quota.quotaLeft ?? quota.leftQuota ?? quota.remaining;
+  const limit = quota.dailyLimit;
+  setChip('chip-quota', left === undefined ? 'warn' : 'ok',
+    left === undefined ? 'Quota unknown'
+      : limit ? `Quota ${num(left)} left / ${num(limit)}` : `Quota ${num(left)} left`);
+  const devOn = !!(data.settings && data.settings.devMode && data.settings.devMode.enabled);
+  setChip('chip-devmode', devOn ? 'ok' : 'bad', devOn ? 'Dev mode on' : 'Dev mode off');
+
+  const ranked = [...tokens].sort((a, b) => (b.value || 0) - (a.value || 0));
+  const total = data.totalUsd || 0;
+  $('stage-token-count').textContent = `${tokens.length} asset${tokens.length === 1 ? '' : 's'}`;
+  $('stage-holdings').innerHTML = ranked.length
+    ? ranked.map(t => {
+        const share = total > 0 ? ((t.value || 0) / total) * 100 : 0;
+        return `<tr><td><div class="sym">${tokenGlyph(t)}<span>${esc(t.symbol || 'unknown')}</span></div></td>`
+          + `<td class="num privacy-blur">${esc(num(t.balance))}</td>`
+          + `<td class="num privacy-blur">${esc(valueCell(t.price, t.value))}</td>`
+          + `<td class="num">${share >= 0.1 ? share.toFixed(1) + '%' : '—'}</td></tr>`;
+      }).join('')
+    : '<tr class="empty-row"><td colspan="4">No non-zero token balance on BSC</td></tr>';
+
+  const errs = data.errors || [];
+  $('overview-errors').hidden = errs.length === 0;
+  $('overview-errors').textContent = errs.join(' · ');
+
+  const top = [...tokens].sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 5);
+  $('top-holdings').innerHTML = top.length
+    ? top.map(t => `<tr><td><div class="sym">${tokenGlyph(t)}<span>${esc(t.symbol || 'unknown')}</span></div></td><td class="num privacy-blur">${esc(num(t.balance))}</td><td class="num privacy-blur">${esc(valueCell(t.price, t.value))}</td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="3">No non-zero token balance on BSC</td></tr>';
+
+  $('tokens-body').innerHTML = tokens.length
+    ? tokens.map(t => `<tr><td><div class="sym">${tokenGlyph(t)}<span>${esc(t.symbol || 'unknown')}${t.name ? `<br><span style="color:var(--muted);font-size:11.5px;font-weight:400">${esc(t.name)}</span>` : ''}</span></div></td><td class="mono wide" style="font-size:12px">${t.contract ? `<a class="hash-link mono" href="https://bscscan.com/token/${esc(t.contract)}" target="_blank" rel="noreferrer" title="View token on BscScan">${esc(shortAddr(t.contract, 8, 6))} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;vertical-align:middle;margin-left:2px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : '--'}</td><td class="num privacy-blur">${esc(num(t.balance))}</td><td class="num privacy-blur">${t.price ? esc(usdSoft(t.price)) : '--'}</td><td class="num privacy-blur">${esc(valueCell(t.price, t.value))}</td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="5">No non-zero token balance on BSC</td></tr>';
+  $('tokens-total').textContent = 'Total ' + usd(data.totalUsd);
+
+  setChip('chip-rpc', data.errors && data.errors.length ? 'warn' : 'ok',
+    data.errors && data.errors.length ? 'BSC data degraded' : 'BSC data live');
+  setChip('chip-session', 'ok', 'Session connected');
+  $('session-dot').className = 'dot pulse';
+}
+
+function assetCell(r) {
+  if (!r.symbol) return '--';
+  const amount = r.amount === null || r.amount === undefined ? '' : ` <span class="mono privacy-blur" style="color:var(--sub)">${esc(num(r.amount))}</span>`;
+  const id = r.tokenId ? ` <span class="privacy-blur" style="color:var(--muted)">#${esc(r.tokenId)}</span>` : '';
+  return `${esc(r.symbol)}${amount}${id}`;
+}
+
+function feeCell(r) {
+  if (!r.fee || !r.fee.amount) return '--';
+  const a = Number(r.fee.amount);
+  const shown = a > 0 && a < 0.0001 ? a.toExponential(2) : a.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+  return `<span class="mono privacy-blur" title="${esc(a)} ${esc(r.fee.symbol || '')}">${esc(shown)} <span style="color:var(--muted)">${esc(r.fee.symbol || '')}</span></span>`;
+}
+
+function activityRow(r) {
+  const st = String(r.status ?? '').toUpperCase();
+  const stCls = st.includes('CONFIRM') || st.includes('SUCCESS') ? 'ok' : st.includes('PEND') || st.includes('PROCESS') ? 'wait' : st.includes('FAIL') || st.includes('REVERT') ? 'bad' : '';
+  const dir = r.direction === 'send' ? 'neg' : r.direction === 'receive' ? 'pos' : '';
+  return `<tr><td>${esc(when(r.time))}</td><td>${esc(r.type ?? '--')}</td><td class="${dir}">${assetCell(r)}</td><td class="num">${feeCell(r)}</td><td>${st ? `<span class="state ${stCls}">${esc(st)}</span>` : '--'}</td><td class="mono" style="font-size:12px">${r.hash ? `<a class="hash-link" href="https://bscscan.com/tx/${esc(r.hash)}" target="_blank" rel="noreferrer" title="${esc(r.hash)}">${esc(shortAddr(r.hash, 8, 6))}</a>` : '--'}</td></tr>`;
+}
+
+function renderActivity(rows, append = false) {
+  if (!append) state.activity = [];
+  state.activity = state.activity.concat(rows || []);
+  const body = $('activity-body');
+  body.innerHTML = state.activity.length
+    ? state.activity.map(activityRow).join('')
+    : '<tr class="empty-row"><td colspan="6">No transactions reported yet</td></tr>';
+  $('activity-count').textContent = `${state.activity.length} row${state.activity.length === 1 ? '' : 's'}`;
+  $('top-activity').innerHTML = state.activity.length
+    ? state.activity.slice(0, 5).map(r => `<tr><td>${esc(r.type ?? '--')}</td><td>${assetCell(r)}</td><td class="num">${esc(when(r.time))}</td></tr>`).join('')
+    : '<tr class="empty-row"><td colspan="3">No transactions reported yet</td></tr>';
+}
+
+function renderNfts(data) {
+  state.nfts = data;
+  const all = data.collections || [];
+  const held = all.filter(c => c.status === 'hold');
+  const sold = all.filter(c => c.status === 'sold');
+  const transferred = all.filter(c => c.status === 'transferred');
+  
+  if ($('cnt-all')) $('cnt-all').textContent = all.length;
+  if ($('cnt-hold')) $('cnt-hold').textContent = held.length;
+  if ($('cnt-sold')) $('cnt-sold').textContent = sold.length;
+
+  const currentFilter = state.nftFilter || 'all';
+  document.querySelectorAll('.filter-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+  });
+
+  const cols = currentFilter === 'hold' ? held : currentFilter === 'sold' ? sold : all;
+  $('nft-scan').textContent = `${cols.length} shown · ${held.length} held · ${sold.length} sold · ${transferred.length} transferred`;
+
+  $('nft-grid').innerHTML = cols.length
+    ? cols.map(c => {
+        const isSold = c.status === 'sold';
+        const isTransferred = c.status === 'transferred';
+        const media = c.image
+          ? `<img class="nft-media" src="${esc(c.image)}" alt="${esc(c.name || 'NFT')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('noimg');this.remove()">`
+          : '';
+        const clickHandler = isSold ? `onclick="openPnlModal('${esc(c.contract)}')"` : `onclick="openNftModal('${esc(c.contract)}')"` ;
+        
+        let headerAction = '';
+        if (isSold && c.pnl) {
+          const pnl = c.pnl || {};
+          const isPos = (pnl.netUsd || 0) > 0;
+          const pnlText = isPos ? `+$${pnl.netUsd.toFixed(2)} PnL` : `$0.00 PnL`;
+          const pnlCls = isPos ? 'pos' : 'neut';
+          headerAction = `<button class="pnl-tag-btn ${pnlCls}" type="button" onclick="event.stopPropagation(); openPnlModal('${esc(c.contract)}')" title="View realized PnL breakdown">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+            <span class="privacy-blur">${pnlText}</span>
+          </button>`;
+        } else if (c.site) {
+          headerAction = `<a class="site-link-btn" href="${esc(c.site)}" target="_blank" rel="noreferrer" title="Open official site" onclick="event.stopPropagation()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            <span>Site</span>
+          </a>`;
+        }
+
+        let bottomMeta = '';
+        if (isSold) {
+          const soldCount = (c.pnl && c.pnl.soldCount) || (c.items ? c.items.length : 1);
+          const roi = (c.pnl && c.pnl.roiPercent) || 0;
+          bottomMeta = `<div class="nft-count">
+            <span class="status-chip" style="color:var(--muted);font-size:11px;font-weight:600;">${soldCount} SOLD</span>
+            ${roi > 0 ? `<span class="mono" style="margin-left:auto;color:#8ab86b;font-weight:700;font-size:12px;">+${num(roi)}% ROI</span>` : ''}
+          </div>`;
+        } else if (isTransferred) {
+          bottomMeta = `<div class="nft-count">
+            <span class="status-chip" style="color:var(--sub);font-size:11px;font-weight:600;">TRANSFERRED</span>
+          </div>`;
+        } else {
+          bottomMeta = `<div class="nft-count">
+            <strong class="mono">${esc(c.balance)}</strong>
+            <span>held</span>
+          </div>`;
+        }
+
+        return `<section class="panel nft-card is-multi" ${clickHandler} style="cursor:pointer;" title="${isSold ? 'Click to view PnL card' : 'Click to view all NFTs'}">
+          <div class="nft-thumb${c.image ? '' : ' empty'}">
+            ${media}
+            <span class="nft-fallback"><i>${isSold ? 'sold' : 'no artwork'}</i><b>${esc((c.symbol || c.name || '—').slice(0, 6).toUpperCase())}</b></span>
+          </div>
+          <div class="nft-body">
+            <div class="nft-card-header">
+              <h2 title="${esc(c.name || '')}">${esc(c.name || 'Unnamed')}</h2>
+              ${headerAction}
+            </div>
+            <a class="mono" href="https://bscscan.com/token/${esc(c.contract)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">${esc(shortAddr(c.contract, 8, 6))}</a>
+            ${bottomMeta}
+          </div>
+        </section>`;
+      }).join('')
+    : `<section class="panel" style="grid-column:1/-1"><div class="empty-row" style="color:var(--muted);text-align:center;padding:24px">No ${esc(currentFilter)} collections found for this wallet</div></section>`;
+
+  renderOverviewNftRow(all);
+}
+
+function renderOverviewNftRow(allCols) {
+  const container = $('overview-nft-row');
+  if (!container) return;
+  const countEl = $('overview-nft-count');
+  const heldCols = allCols.filter(c => c.status === 'hold');
+  // Prioritize active held collections, otherwise any collection, capped to max 1 row (4 items)
+  const displayCols = (heldCols.length ? heldCols : allCols).slice(0, 4);
+
+  if (countEl) countEl.textContent = `${allCols.length} collection${allCols.length === 1 ? '' : 's'}`;
+
+  if (!displayCols.length) {
+    container.innerHTML = '<div class="empty-row" style="color:var(--muted);text-align:center;padding:18px;width:100%;">No NFT collections found</div>';
+    return;
+  }
+
+  container.innerHTML = displayCols.map(c => {
+    const isSold = c.status === 'sold';
+    const isTransferred = c.status === 'transferred';
+    const media = c.image
+      ? `<img class="nft-media" src="${esc(c.image)}" alt="${esc(c.name || 'NFT')}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('noimg');this.remove()">`
+      : '';
+    const clickHandler = isSold ? `onclick="openPnlModal('${esc(c.contract)}')"` : `onclick="openNftModal('${esc(c.contract)}')"` ;
+
+    let bottomMeta = '';
+    if (isSold) {
+      const soldCount = (c.pnl && c.pnl.soldCount) || (c.items ? c.items.length : 1);
+      const roi = (c.pnl && c.pnl.roiPercent) || 0;
+      bottomMeta = `<div class="nft-count">
+        <span class="status-chip" style="color:var(--muted);font-size:10px;font-weight:600;">${soldCount} SOLD</span>
+        ${roi > 0 ? `<span class="mono" style="margin-left:auto;color:#8ab86b;font-weight:700;font-size:11px;">+${num(roi)}% ROI</span>` : ''}
+      </div>`;
+    } else if (isTransferred) {
+      bottomMeta = `<div class="nft-count">
+        <span class="status-chip" style="color:var(--sub);font-size:10px;font-weight:600;">TRANSFERRED</span>
+      </div>`;
+    } else {
+      bottomMeta = `<div class="nft-count">
+        <strong class="mono">${esc(c.balance)}</strong>
+        <span>held</span>
+      </div>`;
+    }
+
+    let headerAction = '';
+    if (isSold && c.pnl) {
+      const pnl = c.pnl || {};
+      const isPos = (pnl.netUsd || 0) > 0;
+      const pnlText = isPos ? `+$${pnl.netUsd.toFixed(2)}` : `$0.00`;
+      const pnlCls = isPos ? 'pos' : 'neut';
+      headerAction = `<button class="pnl-tag-btn ${pnlCls}" type="button" onclick="event.stopPropagation(); openPnlModal('${esc(c.contract)}')" title="View realized PnL breakdown">
+        <span class="privacy-blur">${pnlText}</span>
+      </button>`;
+    } else if (c.site) {
+      headerAction = `<a class="site-link-btn" href="${esc(c.site)}" target="_blank" rel="noreferrer" title="Open official site" onclick="event.stopPropagation()">
+        <span>Site ↗</span>
+      </a>`;
+    }
+
+    return `<section class="panel nft-card is-multi" ${clickHandler} style="cursor:pointer;" title="${isSold ? 'Click to view PnL card' : 'Click to view collection'}">
+      <div class="nft-thumb${c.image ? '' : ' empty'}">
+        ${media}
+        <span class="nft-fallback"><i>${isSold ? 'sold' : 'no artwork'}</i><b>${esc((c.symbol || c.name || '—').slice(0, 6).toUpperCase())}</b></span>
+      </div>
+      <div class="nft-body">
+        <div class="nft-card-header">
+          <h2 title="${esc(c.name || '')}">${esc(c.name || 'Unnamed')}</h2>
+          ${headerAction}
+        </div>
+        <a class="mono" href="https://bscscan.com/token/${esc(c.contract)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()">${esc(shortAddr(c.contract, 8, 6))}</a>
+        ${bottomMeta}
+      </div>
+    </section>`;
+  }).join('');
+}
+
+/* ------------------------------ loading ----------------------------- */
+async function loadOverview() {
+  try {
+    const data = await api('/api/overview');
+    renderOverview(data);
+  } catch (err) {
+    if (err.status === 401) { showGate('Session expired'); return; }
+    notify(err.message, true);
+    setChip('chip-session', 'bad', 'Session error');
+    setChip('chip-rpc', 'bad', 'RPC error');
+  }
+}
+
+async function loadActivity(append = false) {
+  try {
+    const q = new URLSearchParams({ limit: '25' });
+    if (append && state.cursor) q.set('cursor', state.cursor);
+    const data = await api('/api/activity?' + q);
+    state.cursor = data.nextCursor || null;
+    renderActivity(data.rows, append);
+    $('activity-more').disabled = !state.cursor;
+  } catch (err) {
+    if (err.status === 401) { showGate('Session expired'); return; }
+    $('activity-body').innerHTML = `<tr class="empty-row"><td colspan="6">${esc(err.message)}</td></tr>`;
+  }
+}
+
+async function loadNfts() {
+  $('nft-grid').innerHTML = '<section class="panel" style="grid-column:1/-1;color:var(--muted);text-align:center;padding:26px">Probing on-chain collections…</section>';
+  $('nft-scan').textContent = 'probing…';
+  try {
+    const data = await api('/api/nfts');
+    renderNfts(data);
+  } catch (err) {
+    if (err.status === 401) { showGate('Session expired'); return; }
+    $('nft-scan').textContent = 'probe failed';
+    $('nft-grid').innerHTML = `<section class="panel" style="grid-column:1/-1"><div class="err-line">${esc(err.message)}</div></section>`;
+  }
+}
+
+async function boot() {
+  try {
+    const savedPrivacy = localStorage.getItem('baw_privacy') === 'true';
+    applyPrivacy(savedPrivacy, false);
+    const savedTheme = localStorage.getItem('baw_theme');
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+      $('theme-toggle').setAttribute('aria-pressed', String(savedTheme === 'light'));
+    }
+  } catch {}
+  try {
+    const s = await api('/api/session');
+    state.session = s;
+    if (!s.connected) {
+      const seen = !!(s.auth && s.auth.qr) || (s.auth && s.auth.state === 'expired');
+      setGateIntro(seen);
+      showGate(s.auth && s.auth.state === 'expired' ? 'Previous QR expired' : 'Waiting for login');
+      setChip('chip-session', 'bad', 'Session expired');
+      timer.expiresAt = null;
+      paintTimer();
+      await requestQr();
+      return;
+    }
+    hideGate();
+    applySessionTimer(s);
+    // Fetch overview, activity, and nfts in parallel for instant loading
+    await Promise.all([loadOverview(), loadActivity(false), loadNfts()]);
+  } catch (err) {
+    notify(err.message, true);
+  }
+}
+
+/* ------------------------------- wiring ----------------------------- */
+function switchView(name) {
+  state.view = name;
+  document.querySelectorAll('.view').forEach(v => { v.hidden = v.id !== 'view-' + name; });
+  document.querySelectorAll('.nav button, .mobile-nav button').forEach(b => {
+    if (b.dataset.view === name) b.setAttribute('aria-current', 'page');
+    else if (b.dataset.view) b.removeAttribute('aria-current');
+  });
+  if (name === 'nfts' && !state.nfts) loadNfts();
+  if (name === 'activity' && !state.activity.length) loadActivity(false);
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-view]');
+  if (btn && btn.dataset.view) switchView(btn.dataset.view);
+});
+
+async function copyText(text, label = 'Copied') {
+  let ok = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    }
+  } catch {}
+  if (!ok) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      ok = document.execCommand('copy');
+      ta.remove();
+    } catch {}
+  }
+  if (ok) notify(label); else notify('Copy blocked by browser', true);
+  return ok;
+}
+
+$('copy-addr').addEventListener('click', async () => {
+  const raw = state.overview && state.overview.bscAddress;
+  if (!raw) { notify('No address loaded yet', true); return; }
+  const btn = $('copy-addr');
+  btn.classList.add('copied');
+  setTimeout(() => btn.classList.remove('copied'), 1400);
+  await copyText(raw, 'Address copied');
+});
+$('gate-login').addEventListener('click', requestQr);
+$('pairing').addEventListener('click', async () => {
+  const code = $('pairing').textContent.replace(/copy/i, '').replace(/\s+/g, '');
+  if (!code) return;
+  try { await navigator.clipboard.writeText(code); notify('Pairing code copied'); }
+  catch { notify('Copy blocked by the browser', true); }
+});
+$('refresh').addEventListener('click', async () => { await loadOverview(); if (state.view === 'activity') await loadActivity(false); if (state.view === 'nfts') await loadNfts(); notify('Refreshed'); });
+$('activity-more').addEventListener('click', () => loadActivity(true));
+$('logout').addEventListener('click', async () => {
+  if (!confirm('Sign out of the agentic wallet session on this host?')) return;
+  try { await api('/api/logout', { method: 'POST' }); } catch { /* already gone */ }
+  state.overview = null; state.activity = []; state.nfts = null; state.cursor = null;
+  showGate('Signed out');
+  setGateIntro(true);
+  notify('Signed out');
+});
+$('theme-toggle').addEventListener('click', () => {
+  const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('baw_theme', next); } catch {}
+  $('theme-toggle').setAttribute('aria-pressed', String(next === 'light'));
+  notify(next === 'light' ? 'Light theme' : 'Dark theme');
+});
+
+function applyPrivacy(isPrivate, notifyUser = true) {
+  document.documentElement.dataset.privacy = String(isPrivate);
+  const btn = $('privacy-toggle');
+  if (btn) {
+    btn.setAttribute('aria-pressed', String(isPrivate));
+    btn.setAttribute('title', isPrivate ? 'Show amounts (unblur)' : 'Hide/blur balances & amounts');
+    const morph = btn.querySelector('morph-icon');
+    if (morph) morph.icon = isPrivate ? ICONS.eyeOff : ICONS.eye;
+  }
+  try { localStorage.setItem('baw_privacy', isPrivate ? 'true' : 'false'); } catch {}
+  if (notifyUser) {
+    notify(isPrivate ? 'Privacy mode on: amounts blurred 🙈' : 'Privacy mode off: amounts visible 👁️');
+  }
+}
+
+$('privacy-toggle').addEventListener('click', () => {
+  const current = document.documentElement.dataset.privacy === 'true';
+  applyPrivacy(!current, true);
+});
+
+/* ------------------------- session countdown ------------------------- */
+const timer = { expiresAt: null, skewMs: 0 };
+
+function fmtLeft(ms) {
+  if (ms <= 0) return 'expired';
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return d > 0 ? `${d}d ${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(h)}:${pad(m)}:${pad(sec)}`;
+}
+
+function paintTimer() {
+  const chip = $('session-timer');
+  const out = $('session-countdown');
+  if (!chip || !out) return;
+  if (!timer.expiresAt) {
+    chip.dataset.state = 'unknown';
+    out.textContent = state.session && state.session.connected ? 'unknown' : '--:--:--';
+    chip.title = state.session && state.session.connected
+      ? 'Binance did not report a session expiry for this account'
+      : 'No active session';
+    return;
+  }
+  const left = timer.expiresAt * 1000 - (Date.now() + timer.skewMs);
+  out.textContent = fmtLeft(left);
+  chip.dataset.state = left <= 0 ? 'bad' : left < 3600_000 ? 'warn' : 'ok';
+  const when = new Date(timer.expiresAt * 1000);
+  chip.title = `Session expires ${when.toLocaleString([], { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short', hour12: false })}`;
+}
+
+function applySessionTimer(payload) {
+  const expires = Number(payload && payload.sessionExpiresAt);
+  timer.expiresAt = Number.isFinite(expires) && expires > 0 ? expires : null;
+  const serverNow = Number(payload && payload.serverNow);
+  timer.skewMs = Number.isFinite(serverNow) && serverNow > 0 ? serverNow * 1000 - Date.now() : 0;
+  paintTimer();
+}
+
+setInterval(() => {
+  $('live-time-str').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  paintTimer();
+}, 1000);
+setInterval(async () => {
+  if (!$('gate').hidden) return;
+  await loadOverview();
+  try { const s2 = await api('/api/session'); state.session = s2; applySessionTimer(s2); } catch { /* keep last known */ }
+}, 30000);
+
+/* ---------------------- NFT Filters & PnL / Donation Modals ---------------------- */
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('.filter-tab');
+  if (tab && tab.dataset.filter) {
+    state.nftFilter = tab.dataset.filter;
+    if (state.nfts) renderNfts(state.nfts);
+  }
+});
+
+let activePnlCol = null;
+
+window.openPnlModal = function(contract) {
+  const collection = (state.nfts && state.nfts.collections || []).find(
+    c => (c.contract || '').toLowerCase() === (contract || '').toLowerCase()
+  );
+  if (!collection || !collection.pnl) return;
+  activePnlCol = collection;
+  window.activePnlCol = collection;
+  const pnl = collection.pnl;
+  const isPos = (pnl.netUsd || 0) > 0;
+
+  $('pnl-modal-title').textContent = `${collection.name} PnL`;
+  $('pnl-modal-sub').textContent = `Contract: ${shortAddr(collection.contract, 10, 8)} · ${pnl.soldCount} NFT(s) Sold`;
+  $('pnl-art-col').textContent = collection.name.toUpperCase();
+  const firstTx = pnl.tokens && pnl.tokens[0];
+  $('pnl-art-date').textContent = firstTx && firstTx.time ? new Date(firstTx.time).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' });
+  
+  const heroEl = $('pnl-art-hero');
+  heroEl.textContent = isPos ? `+$${pnl.netUsd.toFixed(2)} USDT` : `$${(pnl.netUsd || 0).toFixed(2)} USDT`;
+  heroEl.className = `pnl-hero-val privacy-blur ${isPos ? '' : 'neut'}`;
+  
+  $('pnl-art-roi').textContent = pnl.roiPercent > 0 ? `+${num(pnl.roiPercent)}% ROI` : '0% ROI';
+  $('pnl-art-sold').textContent = `${pnl.soldCount} NFT${pnl.soldCount === 1 ? '' : 's'}`;
+  $('pnl-art-rev').textContent = pnl.revenueUsd > 0 ? `$${pnl.revenueUsd.toFixed(2)} USDT` : '$0.00';
+  $('pnl-art-gas').textContent = pnl.costUsd > 0 ? `$${pnl.costUsd.toFixed(2)} USDT` : '$0.00';
+  $('pnl-art-net').textContent = isPos ? `+$${pnl.netUsd.toFixed(2)} USDT` : `$${(pnl.netUsd || 0).toFixed(2)} USDT`;
+  $('pnl-art-net').style.color = isPos ? '#8ab86b' : '#F0B90B';
+  const ov = state.overview || {};
+  const ag = ov.agentId || {};
+  const agentDisplay = ag.agentId || ag.handle || ag.domain || 'xieball.ai';
+  $('pnl-art-wallet').textContent = agentDisplay.endsWith('.ai') ? agentDisplay : `${agentDisplay}.ai`;
+
+  const tokens = pnl.tokens || [];
+  $('pnl-art-tokens').innerHTML = tokens.length ? tokens.map(t => {
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;">
+      <span class="privacy-blur" style="font-weight:600;color:var(--text);">Token #${esc(t.tokenId)}</span>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span class="mono privacy-blur" style="color:#8ab86b;font-weight:600;">+$${esc(t.proceedsUsd.toFixed(2))} USDT</span>
+        ${t.txHash ? `<a class="mono" href="https://bscscan.com/tx/${esc(t.txHash)}" target="_blank" rel="noreferrer" style="color:var(--clay);font-size:11px;text-decoration:none;">${esc(shortAddr(t.txHash, 6, 4))} ↗</a>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<div style="color:var(--muted);text-align:center;">No trade details</div>';
+
+  $('pnl-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+};
+
+window.closePnlModal = function() {
+  $('pnl-modal').hidden = true;
+  document.body.style.overflow = '';
+};
+
+$('pnl-modal-close').addEventListener('click', closePnlModal);
+$('pnl-modal').addEventListener('click', (e) => {
+  if (e.target === $('pnl-modal')) closePnlModal();
+});
+
+// Copy PnL Card Summary
+function generatePnlCanvas() {
+  const col = activePnlCol || window.activePnlCol;
+  if (!col || !col.pnl) return null;
+  const pnl = col.pnl;
+  const isPos = (pnl.netUsd || 0) > 0;
+
+  const safeRoi = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toFixed(1) : '0.0';
+  };
+  const safeShort = (a) => !a ? '--' : (a.length <= 13 ? a : `${a.slice(0, 6)}…${a.slice(-4)}`);
+
+  // Full HD 16:9 Aspect Ratio (1920x1080)
+  const canvas = document.createElement('canvas');
+  canvas.width = 1920;
+  canvas.height = 1080;
+  const ctx = canvas.getContext('2d');
+
+  // Background gradient
+  const grad = ctx.createLinearGradient(0, 0, 1920, 1080);
+  grad.addColorStop(0, '#1c180e');
+  grad.addColorStop(1, '#0c0b09');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 1920, 1080, 44);
+  ctx.fill();
+
+  // Subtle gold radial ambient glow
+  const radial = ctx.createRadialGradient(960, 200, 50, 960, 200, 800);
+  radial.addColorStop(0, 'rgba(240, 185, 11, 0.16)');
+  radial.addColorStop(1, 'transparent');
+  ctx.fillStyle = radial;
+  ctx.fillRect(0, 0, 1920, 1080);
+
+  // Gold outer border
+  ctx.strokeStyle = 'rgba(240, 185, 11, 0.45)';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(16, 16, 1888, 1048, 40);
+  ctx.stroke();
+
+  const isPrivate = document.documentElement.dataset.privacy === 'true';
+
+  // 1. Top Branding Bar
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#F0B90B';
+  ctx.font = 'bold 30px monospace, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('BINANCE AGENTIC WALLET', 80, 90);
+
+  const firstTx = pnl.tokens && pnl.tokens[0];
+  const dateStr = firstTx && firstTx.time ? new Date(firstTx.time).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' });
+  ctx.fillStyle = '#8a877d';
+  ctx.font = '24px monospace, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(dateStr, 1840, 90);
+
+  // 2. Centered Hero Block
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#8a877d';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText((col.name || 'NFT COLLECTION').toUpperCase(), 960, 190);
+
+  ctx.fillStyle = isPos ? '#8ab86b' : '#F0B90B';
+  ctx.font = 'bold 96px monospace, sans-serif';
+  const heroText = isPrivate ? '•••••••' : ((isPos ? '+' : '') + '$' + pnl.netUsd.toFixed(2) + ' USDT');
+  ctx.fillText(heroText, 960, 290);
+
+  ctx.fillStyle = '#F0B90B';
+  ctx.font = 'bold 34px monospace, sans-serif';
+  ctx.fillText((pnl.roiPercent > 0 ? '+' : '') + safeRoi(pnl.roiPercent) + '% ROI', 960, 350);
+
+  // 3. 4 Key Stat Boxes in ONE Row
+  ctx.textAlign = 'left';
+  const boxes = [
+    { lbl: 'TOTAL SOLD', val: `${pnl.soldCount} NFTs`, x: 80, w: 415 },
+    { lbl: 'GROSS REVENUE', val: isPrivate ? '••••••' : `$${pnl.revenueUsd.toFixed(2)} USDT`, x: 525, w: 415 },
+    { lbl: 'ACQUISITION COST', val: isPrivate ? '••••••' : `$${pnl.costUsd.toFixed(2)} USDT`, x: 970, w: 415 },
+    { lbl: 'NET PROFIT', val: isPrivate ? '••••••' : (isPos ? `+$${pnl.netUsd.toFixed(2)} USDT` : `$${pnl.netUsd.toFixed(2)} USDT`), x: 1415, w: 415 },
+  ];
+
+  boxes.forEach(b => {
+    ctx.fillStyle = 'rgba(28, 28, 25, 0.9)';
+    ctx.beginPath();
+    ctx.roundRect(b.x, 410, b.w, 135, 20);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(245, 244, 237, 0.16)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(b.x, 410, b.w, 135, 20);
+    ctx.stroke();
+
+    ctx.fillStyle = '#8a877d';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText(b.lbl, b.x + 24, 455);
+
+    ctx.fillStyle = b.lbl === 'NET PROFIT' ? (isPos ? '#8ab86b' : '#F0B90B') : '#f5f4ed';
+    ctx.font = 'bold 32px monospace, sans-serif';
+    ctx.fillText(b.val, b.x + 24, 510);
+  });
+
+  // 4. Token Breakdown (2 cols x 2 rows inside rounded dark box)
+  ctx.fillStyle = 'rgba(20, 20, 18, 0.75)';
+  ctx.beginPath();
+  ctx.roundRect(80, 580, 1750, 360, 24);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(245, 244, 237, 0.12)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(80, 580, 1750, 360, 24);
+  ctx.stroke();
+
+  // Divider lines
+  ctx.strokeStyle = 'rgba(245, 244, 237, 0.08)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(110, 760); ctx.lineTo(1800, 760);
+  ctx.moveTo(955, 605); ctx.lineTo(955, 915);
+  ctx.stroke();
+
+  const tokens = (pnl.tokens || []).slice(0, 4);
+  tokens.forEach((t, i) => {
+    const colIdx = i % 2;
+    const rowIdx = Math.floor(i / 2);
+    const txLeft = colIdx === 0 ? 120 : 995;
+    const txRight = colIdx === 0 ? 915 : 1790;
+    const ty = rowIdx === 0 ? 685 : 865;
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#f5f4ed';
+    ctx.font = 'bold 30px monospace, sans-serif';
+    ctx.fillText(isPrivate ? 'Token #••••' : `Token #${t.tokenId}`, txLeft, ty);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#8ab86b';
+    ctx.font = 'bold 30px monospace, sans-serif';
+    ctx.fillText(isPrivate ? '••••••' : `+$${t.proceedsUsd.toFixed(2)} USDT`, txRight - 210, ty);
+
+    ctx.fillStyle = '#F0B90B';
+    ctx.font = '24px monospace, sans-serif';
+    ctx.fillText(safeShort(t.txHash) + ' ↗', txRight, ty - 2);
+  });
+
+  // 5. Card Footer
+  ctx.strokeStyle = 'rgba(245, 244, 237, 0.18)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(80, 975);
+  ctx.lineTo(1840, 975);
+  ctx.stroke();
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#8a877d';
+  ctx.font = '24px monospace, sans-serif';
+  const ov = state.overview || {};
+  const ag = ov.agentId || {};
+  const agentDisplay = ag.agentId || ag.handle || ag.domain || 'xieball.ai';
+  const agentTag = agentDisplay.endsWith('.ai') ? agentDisplay : `${agentDisplay}.ai`;
+  ctx.fillText(`Agent: ${agentTag}`, 80, 1022);
+
+  ctx.fillStyle = '#F0B90B';
+  ctx.textAlign = 'right';
+  ctx.fillText('Verified on-chain · BSC Mainnet', 1840, 1022);
+
+  return canvas;
+}
+
+window.generatePnlCanvas = generatePnlCanvas;
+
+// Copy PnL Card as PNG Image directly to Clipboard
+async function copyPnlCard() {
+  const canvas = generatePnlCanvas();
+  if (!canvas) return;
+
+  if (navigator.clipboard && window.ClipboardItem) {
+    try {
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      if (blob) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+        notify('Copied');
+        return;
+      }
+    } catch (err) {
+      // Fall through to text copy fallback
+    }
+  }
+
+  copyFallbackText();
+}
+window.copyPnlCard = copyPnlCard;
+
+$('btn-copy-pnl').addEventListener('click', copyPnlCard);
+
+function copyFallbackText() {
+  const col = activePnlCol || window.activePnlCol;
+  if (!col || !col.pnl) return;
+  const pnl = col.pnl;
+  const isPos = (pnl.netUsd || 0) > 0;
+  const ov = state.overview || {};
+  const ag = ov.agentId || {};
+  const agentDisplay = ag.agentId || ag.handle || ag.domain || 'xieball.ai';
+  const agentTag = agentDisplay.endsWith('.ai') ? agentDisplay : `${agentDisplay}.ai`;
+  const text = `🏆 NFT Realized PnL: ${col.name} (${col.symbol})
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 Net Realized Profit: ${isPos ? '+' : ''}$${pnl.netUsd.toFixed(2)} USDT (${pnl.roiPercent > 0 ? '+' : ''}${pnl.roiPercent}% ROI)
+📦 Total Sold: ${pnl.soldCount} NFT(s)
+💵 Gross Revenue: $${pnl.revenueUsd.toFixed(2)} USDT
+📉 Acquisition Cost: $${pnl.costUsd.toFixed(2)} USDT ${pnl.mintBnb ? `(Mint: ${pnl.mintBnb} BNB + Gas)` : ''}
+🔗 Contract: https://bscscan.com/token/${col.contract}
+🤖 Agent: ${agentTag}
+Verified on-chain · Binance Agentic Wallet (BSC)`;
+
+  copyText(text, 'Copied');
+}
+
+// Download PnL Card as PNG (Full HD 16:9)
+function downloadPnlCard() {
+  const canvas = generatePnlCanvas();
+  if (!canvas) return;
+  const col = activePnlCol || window.activePnlCol;
+  const link = document.createElement('a');
+  link.download = `${(col ? col.symbol : 'nft').toLowerCase()}-pnl-card.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  notify('Downloaded');
+}
+window.downloadPnlCard = downloadPnlCard;
+
+$('btn-download-pnl').addEventListener('click', downloadPnlCard);
+
+/* Donation Modal */
+window.openDonationModal = function() {
+  $('donation-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeDonationModal = function() {
+  $('donation-modal').hidden = true;
+  document.body.style.overflow = '';
+};
+
+$('donation-close').addEventListener('click', closeDonationModal);
+$('donation-modal').addEventListener('click', (e) => {
+  if (e.target === $('donation-modal')) closeDonationModal();
+});
+
+$('donate-copy-btn').addEventListener('click', async () => {
+  const addr = $('donate-addr-val').textContent.trim();
+  await copyText(addr, 'Donation address copied! Thank you! ☕');
+});
+
+window.openNftModal = function(contract) {
+  const collection = (state.nfts && state.nfts.collections || []).find(
+    c => (c.contract || '').toLowerCase() === (contract || '').toLowerCase()
+  );
+  if (!collection) return;
+  const items = collection.items || [];
+  $('modal-title').textContent = collection.name || 'Collection NFTs';
+  $('modal-site').href = collection.site || `https://bscscan.com/token/${collection.contract}`;
+  $('modal-sub').textContent = `${items.length} NFT${items.length === 1 ? '' : 's'} held · ${shortAddr(collection.contract, 10, 8)}`;
+  
+  $('modal-grid').innerHTML = items.length ? items.map(item => {
+    const thumb = item.image
+      ? `<img src="${esc(item.image)}" alt="${esc(item.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'modal-item-fallback',textContent:'NFT'}))">`
+      : `<div class="modal-item-fallback">#${esc(item.tokenId)}</div>`;
+    return `<div class="modal-item-card">
+      <div class="modal-item-thumb">${thumb}</div>
+      <div class="modal-item-info">
+        <strong class="modal-item-title" title="${esc(item.name)}">${esc(item.name)}</strong>
+        <span class="mono modal-item-id privacy-blur">On-chain ID: #${esc(item.tokenId)}</span>
+        <a class="modal-item-link mono" href="${esc(item.bscscan)}" target="_blank" rel="noreferrer">
+          <span>View on BscScan</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+    </div>`;
+  }).join('') : '<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted);">No tokens listed</div>';
+  
+  $('nft-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeNftModal = function() {
+  $('nft-modal').hidden = true;
+  document.body.style.overflow = '';
+};
+
+$('modal-close').addEventListener('click', closeNftModal);
+$('nft-modal').addEventListener('click', (e) => {
+  if (e.target === $('nft-modal')) closeNftModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('nft-modal').hidden) closeNftModal();
+});
+
+boot();
+</script>
+  <!-- Floating Social & Donation Dock -->
+  <div class="floating-dock" aria-label="Social and donation links">
+    <a class="social-fab fab-x" href="https://x.com/xieball" target="_blank" rel="noreferrer" title="Follow @xieball on X (Twitter)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </a>
+    <a class="social-fab fab-gh" href="https://github.com" target="_blank" rel="noreferrer" title="GitHub">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+    </a>
+    <button class="social-fab fab-coffee" type="button" id="fab-coffee" title="Buy me a coffee / Donate" onclick="openDonationModal()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
+    </button>
+  </div>
+</body>
+</html>

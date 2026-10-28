@@ -1,0 +1,19 @@
+[Unit]
+Description=BAW Dashboard - Binance Agentic Wallet operator console
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/projects/bawdash
+Environment=PATH=/root/.hermes/tools/node-26.7.0-linux-x64/bin:/usr/local/bin:/usr/bin:/bin
+Environment=BAW_BIN=/root/.hermes/tools/node-26.7.0-linux-x64/bin/baw
+Environment=HOME=/root
+ExecStart=/root/projects/bawdash/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 4331 --proxy-headers
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
