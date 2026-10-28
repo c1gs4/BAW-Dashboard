@@ -211,7 +211,7 @@
   .view-multi-btn:hover { background:var(--clay); color:#1f1e1d; border-color:var(--clay); }
   .view-multi-btn:hover svg { transform:translateX(3px); }
 
-  /* Floating Social & Coffee Dock */
+  /* Floating Social & Update Dock */
   .floating-dock { position:fixed; right:24px; bottom:24px; z-index:850; display:flex; align-items:center; gap:10px; }
   .social-fab { width:42px; height:42px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; text-decoration:none; border:1px solid var(--line-strong); box-shadow:0 8px 24px rgba(0,0,0,.45); transition:transform .16s, box-shadow .16s, border-color .16s; }
   .social-fab:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,.65); }
@@ -220,8 +220,12 @@
   .fab-x:hover { border-color:#fff; }
   .fab-gh { background:#1b1f23; color:#f0f6fc; border-color:rgba(255,255,255,.2); }
   .fab-gh:hover { border-color:#F0B90B; color:#F0B90B; }
-  .fab-coffee { background:#F0B90B; color:#141413; border-color:#F0B90B; border:0; }
-  .fab-coffee:hover { background:#ffd043; border-color:#ffd043; }
+
+  /* Bottom-Left Update Button */
+  .update-pill-btn { position:fixed; left:24px; bottom:24px; z-index:850; display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:999px; background:#181611; border:1px solid #F0B90B; color:#F0B90B; font-family:var(--font-mono); font-size:11.5px; font-weight:600; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.5); transition:all .16s; }
+  .update-pill-btn:hover { background:#F0B90B; color:#141413; transform:translateY(-2px); box-shadow:0 12px 28px rgba(240,185,11,.3); }
+  .update-pill-btn .update-dot { width:7px; height:7px; border-radius:50%; background:#8ab86b; animation:pulse 2s infinite; }
+  @keyframes pulse { 0% { opacity:1; } 50% { opacity:0.3; } 100% { opacity:1; } }
 
   /* NFT Filter Tabs */
   .nft-filter-bar { display:inline-flex; gap:4px; padding:4px; border-radius:999px; background:var(--panel); border:1px solid var(--line-strong); backdrop-filter:blur(14px); }
@@ -519,19 +523,19 @@
     <header class="modal-head">
       <div>
         <div class="section-label">Support Operator</div>
-        <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;">☕ Buy XieBall a Coffee</h2>
+        <h2 style="margin:4px 0 0;font-size:20px;font-weight:600;">Buy XieBall a Coffee</h2>
         <p style="margin:4px 0 0;font-size:12px;color:var(--muted);">Support Binance Agentic Wallet dashboard & automation tooling</p>
       </div>
       <button id="donation-close" class="icon-button" type="button" aria-label="Close modal">✕</button>
     </header>
     <div style="padding:22px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;">
       <div style="background:#fff;padding:12px;border-radius:16px;width:180px;height:180px;display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
-        <img id="donate-qr-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAACj0lEQVR4nO2bQYrjMBBFX40FWcqQA/RR5BvMkfpMcwP7KDlAg7UM2PxZSHaShmamGbc7HkoLB5y3+FApSfWrYuIza/jxKRycd95555133vmPeKsrAHl9MBvk5btuRz3Ob8wnSdIIDC8TDC9Xsy6fBDSSJD3yX63H+Y14SvDSCKSxUX033r5oSpDLT6B/Nv3Of5pvVJPYAuq/X4/z2/KzkS4n2auuy6n7rXqc/wc+1M8oIAPEt2CAabBGBnBvgTybfuf/ih/MzKwF0uVUTl17HQGYy/V5Xz3Ob8SX/L3L0KHFgNkEEzWx99Pj/Ffw1uVa/6qH8rAOWOrf8Mh/tR7nt+JLGSRpqkVwH5c3pUgaG0GU10fH5O/jC2utO4J61nJYU+U8vofkzexUgqw+Xo1qaFxNkmTWrtv1c+p3/sNV8zJOZS9egrwmbKwmlufvIfk7G7IcvWukizVZjEv5+XtQfr0YzwaEieJPdhhD2wBxCpDbpYR6Nv3O/2HdmkMldXvWrB0XJvn96qj8Et+oh1vzLdKaapPB9+cj8nV/Tj1AFJY0G+nXSZY0VxM6jefJ9tHj/Lb87fwNGgwgn2UwG4M1gvhmJZ330eP8tvwa30YkzUHkYj0Hkc9YJebg8T00nwPW5ZOsA6zLAYZ2gQb3n4/Kr/6k1jGrOotDWjxp95+Py9/VR0Cj0j+qrQW4mRxeHx2ZX+cn7VWSdbG0fkulBHHCuj31OL8xn5cJ53rqNqWrwGBmfv7+R3y6mDG0IF0CEG/dw2/R4/y2/NCC+mxmXZyQLnUwq07KPr1+5x/W+/lJkc+TpbFFMAegmRh+7qbH+W359/fnajjHWinV/u9aPvn9+WC8+f+7nXfeeeedd353/jdkEM2NsR53MgAAAABJRU5ErkJggg==" alt="Donation address QR" style="width:100%;height:100%;image-rendering:pixelated;display:block;">
+        <img id="donate-qr-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHwAAAB8AQAAAACDZekTAAABFUlEQVR4nK2VsXUEQQhDP/s2Fx1c/2VtB6ICObhL7uxgjU02vCcGaQRT4S3m4CNuJKaqZqaKmaq6A/lMnIRR2RQOs6lxMAV+0Iipe5BvfQDT6Yzm7rU/Jgz9S8hbQgHa16NRVjXKDX4dGrypEWCavEpt/FHW0AYVoGvDBTtRLBLsFZdTFGlQWb3TlCSJZJClbPo4YKZsDPJdyHucDBIlMoVX84IFkoIs5A0XkijPVyHaecyd0hhawMofJ4xGqDNA77hYyEQxWush2QkiyUoPDBY2ArLyGEniSLLj3ewfU1VwDepByz2WWP0wZYGWs/8UI4KlT08AcVFucf1hr0PzCKh3XBJHwbCdl5MCz0gaz07T+od//wtoOKp65ET7pwAAAABJRU5ErkJggg==" alt="Donation address QR" style="width:100%;height:100%;image-rendering:pixelated;display:block;">
       </div>
       <div style="width:100%;">
         <div class="section-label" style="font-size:10.5px;margin-bottom:6px;">BSC / EVM DONATION ADDRESS</div>
         <div style="display:flex;align-items:center;gap:8px;background:var(--inset);padding:8px 12px;border-radius:10px;border:1px solid var(--line-strong);">
-          <span class="mono" style="font-size:12px;color:var(--text);word-break:break-all;text-align:left;flex:1;" id="donate-addr-val">0x64b861Be5C96b8247C5d13CB21e98aeb0a37E74D</span>
+          <span class="mono" style="font-size:12px;color:var(--text);word-break:break-all;text-align:left;flex:1;" id="donate-addr-val">0xc4ee1da46b98cb0753cb3f512cabe961e9c63087</span>
           <button id="donate-copy-btn" class="copy-btn" type="button" title="Copy donation address">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6.5A2.5 2.5 0 0 0 4 5.5v6A2.5 2.5 0 0 0 6.5 14"/></svg>
           </button>
@@ -1374,7 +1378,7 @@ function applyPrivacy(isPrivate, notifyUser = true) {
   }
   try { localStorage.setItem('baw_privacy', isPrivate ? 'true' : 'false'); } catch {}
   if (notifyUser) {
-    notify(isPrivate ? 'Privacy mode on: amounts blurred 🙈' : 'Privacy mode off: amounts visible 👁️');
+    notify(isPrivate ? 'Privacy mode on: amounts blurred' : 'Privacy mode off: amounts visible');
   }
 }
 
@@ -1752,7 +1756,7 @@ $('donation-modal').addEventListener('click', (e) => {
 
 $('donate-copy-btn').addEventListener('click', async () => {
   const addr = $('donate-addr-val').textContent.trim();
-  await copyText(addr, 'Donation address copied! Thank you! ☕');
+  await copyText(addr, 'Donation address copied');
 });
 
 window.openNftModal = function(contract) {
@@ -1799,19 +1803,66 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('nft-modal').hidden) closeNftModal();
 });
 
+// Check git update status
+async function checkGitUpdate() {
+  try {
+    const res = await fetch('/api/update/check');
+    if (!res.ok) return;
+    const data = await res.json();
+    const btn = $('btn-update-available');
+    if (data.updateAvailable && btn) {
+      btn.style.display = 'inline-flex';
+      $('update-btn-text').textContent = `Update (${data.behind})`;
+    } else if (btn) {
+      btn.style.display = 'none';
+    }
+  } catch (err) {}
+}
+
+async function applyUpdate() {
+  const btn = $('btn-update-available');
+  if (!btn) return;
+  const originalHtml = btn.innerHTML;
+  btn.style.pointerEvents = 'none';
+  btn.textContent = 'Updating...';
+  try {
+    const res = await fetch('/api/update/apply', { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      btn.textContent = 'Updated, restarting...';
+      notify('Updated to latest version. Reloading...');
+      setTimeout(() => window.location.reload(), 2500);
+    } else {
+      btn.innerHTML = originalHtml;
+      btn.style.pointerEvents = '';
+      notify('Update failed: ' + (data.detail || 'unknown'), true);
+    }
+  } catch (err) {
+    btn.innerHTML = originalHtml;
+    btn.style.pointerEvents = '';
+    notify('Update request failed', true);
+  }
+}
+window.applyUpdate = applyUpdate;
+
 boot();
+checkGitUpdate();
+setInterval(checkGitUpdate, 60000);
 </script>
   <!-- Floating Social & Donation Dock -->
   <div class="floating-dock" aria-label="Social and donation links">
     <a class="social-fab fab-x" href="https://x.com/xieball" target="_blank" rel="noreferrer" title="Follow @xieball on X (Twitter)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
     </a>
-    <a class="social-fab fab-gh" href="https://github.com" target="_blank" rel="noreferrer" title="GitHub">
+    <a class="social-fab fab-gh" href="https://github.com/c1gs4/BAW-Dashboard" target="_blank" rel="noreferrer" title="GitHub Repository">
       <svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
     </a>
-    <button class="social-fab fab-coffee" type="button" id="fab-coffee" title="Buy me a coffee / Donate" onclick="openDonationModal()">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
-    </button>
   </div>
+
+  <!-- Bottom-Left Update Button (hidden unless update is available) -->
+  <button id="btn-update-available" class="update-pill-btn" type="button" style="display:none;" onclick="applyUpdate()">
+    <span class="update-dot"></span>
+    <span id="update-btn-text">Update Available</span>
+  </button>
 </body>
 </html>

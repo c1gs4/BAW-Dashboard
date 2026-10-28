@@ -855,6 +855,40 @@ def overview():
     return cached("overview", 20, load)
 
 
+@app.get("/api/update/check")
+def update_check():
+    """Check if local git commit is behind remote origin/main."""
+    def load():
+        try:
+            # Fetch silently from remote with 8s timeout
+            subprocess.run(["git", "fetch", "origin", "main"], cwd=str(ROOT), capture_output=True, timeout=8)
+            local = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=str(ROOT), timeout=4).decode().strip()
+            remote = subprocess.check_output(["git", "rev-parse", "origin/main"], cwd=str(ROOT), timeout=4).decode().strip()
+            behind = int(subprocess.check_output(["git", "rev-list", "--count", "HEAD..origin/main"], cwd=str(ROOT), timeout=4).decode().strip() or "0")
+            return {
+                "updateAvailable": behind > 0,
+                "behind": behind,
+                "localCommit": local[:7],
+                "remoteCommit": remote[:7],
+            }
+        except Exception as e:
+            return {"updateAvailable": False, "error": str(e)}
+
+    return cached("git_update_check", 30, load)
+
+
+@app.post("/api/update/apply")
+def update_apply():
+    """Pull origin/main and trigger restart."""
+    try:
+        out = subprocess.check_output(["git", "pull", "--ff-only", "origin", "main"], cwd=str(ROOT), timeout=15).decode().strip()
+        # Schedule restart in background via detached subprocess
+        subprocess.Popen(["bash", "-c", "sleep 1 && systemctl restart bawdash"], cwd=str(ROOT))
+        return {"ok": True, "output": out}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 @app.get("/api/activity")
 def activity(limit: int = Query(25, ge=1, le=100), cursor: str | None = None):
     st = wallet_status()
