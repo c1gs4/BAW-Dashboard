@@ -367,7 +367,7 @@ def resolve_agent_id(wallet_addr: str) -> dict:
                 meta = nft_metadata(space_id_contract, tid)
                 name = meta.get("name") or ""
                 clean_name = name.split()[0].strip() if name else ""
-                if clean_name:
+                if clean_name and not clean_name.lower().startswith("jpeg"):
                     return {
                         "claimed": True,
                         "handle": clean_name.replace(".ai", ""),
