@@ -333,25 +333,47 @@ def resolve_agent_id(wallet_addr: str) -> dict:
     if wallet_addr and wallet_addr.startswith("0x"):
         space_id_contract = "0x60b9262456de011f7d15a54cdd8c48baaa8b022f"
         try:
-            # Check if wallet holds Space ID Agent NFT
-            bal_raw = _call(space_id_contract, "0x70a08231" + _pad(wallet_addr))
-            bal = _word(bal_raw, 0)
-            if bal > 0:
-                # Probe tokenOfOwnerByIndex(wallet, 0) -> 0x2f745c59
-                tok_raw = _call(space_id_contract, "0x2f745c59" + _pad(wallet_addr) + ("0" * 64))
-                tid = _word(tok_raw, 0)
-                if tid:
-                    meta = nft_metadata(space_id_contract, tid)
-                    name = meta.get("name") or ""
-                    # Space ID names are like "alice.ai" or "bob"
-                    clean_name = name.split()[0].strip() if name else ""
-                    if clean_name:
-                        return {
-                            "claimed": True,
-                            "handle": clean_name.replace(".ai", ""),
-                            "agentId": clean_name if clean_name.endswith(".ai") else f"{clean_name}.ai",
-                            "onchain": True,
-                        }
+            tid = None
+            # Method A: check tokenOfOwnerByIndex(wallet, 0)
+            try:
+                bal_raw = _call(space_id_contract, "0x70a08231" + _pad(wallet_addr))
+                if _word(bal_raw, 0) > 0:
+                    tok_raw = _call(space_id_contract, "0x2f745c59" + _pad(wallet_addr) + ("0" * 64))
+                    tid = _word(tok_raw, 0)
+            except Exception:
+                pass
+
+            # Method B: scan tx history for space_id_contract tokenId if Method A failed
+            if not tid:
+                try:
+                    payload = baw("wallet", "tx-history", "--size", "50", timeout=25)
+                    for tx in tx_rows(payload):
+                        for hl in tx.get("txHashList", []):
+                            for sent in hl.get("instructions", {}).get("receive", []):
+                                t_info = sent.get("tokenInfo", {})
+                                if (t_info.get("contractAddress") or "").lower() == space_id_contract.lower():
+                                    val = t_info.get("tokenId")
+                                    if val:
+                                        tid = int(str(val))
+                                        break
+                            if tid:
+                                break
+                        if tid:
+                            break
+                except Exception:
+                    pass
+
+            if tid:
+                meta = nft_metadata(space_id_contract, tid)
+                name = meta.get("name") or ""
+                clean_name = name.split()[0].strip() if name else ""
+                if clean_name:
+                    return {
+                        "claimed": True,
+                        "handle": clean_name.replace(".ai", ""),
+                        "agentId": clean_name if clean_name.endswith(".ai") else f"{clean_name}.ai",
+                        "onchain": True,
+                    }
         except Exception:
             pass
 
@@ -879,6 +901,36 @@ def overview():
             out["tokens"] = []
             out["totalUsd"] = 0.0
             out["bscAddress"] = bsc_address(out.get("addresses"))
+
+        # Fallback: if BAW balance returns 0 tokens or failed, probe native BNB balance on-chain
+        if not out["tokens"] and out.get("bscAddress"):
+            try:
+                raw_bal = _rpc("eth_getBalance", [out["bscAddress"], "latest"])
+                if isinstance(raw_bal, str) and raw_bal.startswith("0x"):
+                    wei = int(raw_bal, 16)
+                    bnb_val = wei / 1e18
+                    if bnb_val > 0:
+                        # Fetch current BNB price via public binance ticker or default ~740
+                        bnb_price = 740.0
+                        try:
+                            t_doc = _http_json("https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT", timeout=3)
+                            bnb_price = float(t_doc.get("price") or 740.0)
+                        except Exception:
+                            pass
+                        bnb_usd = bnb_val * bnb_price
+                        out["tokens"].append({
+                            "symbol": "BNB",
+                            "name": "BNB",
+                            "contract": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+                            "chain": "56",
+                            "balance": f"{bnb_val:.8f}",
+                            "price": bnb_price,
+                            "value": bnb_usd,
+                            "icon": token_icon("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "BNB"),
+                        })
+                        out["totalUsd"] = bnb_usd
+            except Exception as b_err:
+                errors.append(f"onchain_bnb: {b_err}")
         for key, args in (
             ("settings", ("wallet", "settings")),
             ("quota", ("wallet", "left-quota")),
