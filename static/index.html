@@ -982,9 +982,10 @@ function renderOverview(data) {
   $('wallet-addr').textContent = shortAddr(state.overview.bscAddress, 8, 6);
   $('wallet-addr').title = state.overview.bscAddress || '';
   $('freshness').textContent = `Snapshot ${when(data.fetchedAt)} · source: BAW CLI`;
-  const agentName = data.agentId && (data.agentId.agentId || data.agentId.handle || data.agentId.domain);
-  $('handle-label').textContent = agentName || 'session';
-  setChip('chip-agent', agentName ? 'ok' : 'warn', agentName ? `Agent ID ${agentName}` : 'Agent ID not claimed');
+  const agentName = data.agentId && (data.agentId.agentId || data.agentId.handle || data.agentId.domain || data.agentId.name);
+  const displayAgent = agentName ? (agentName.endsWith('.ai') ? agentName : `${agentName}.ai`) : null;
+  $('handle-label').textContent = displayAgent || 'session';
+  setChip('chip-agent', displayAgent ? 'ok' : 'warn', displayAgent ? `Agent ID ${displayAgent}` : 'Agent ID not claimed');
   const quota = data.quota || {};
   const left = quota.quotaLeft ?? quota.leftQuota ?? quota.remaining;
   const limit = quota.dailyLimit;

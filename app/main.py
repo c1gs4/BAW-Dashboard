@@ -319,6 +319,45 @@ def _resolve_site_from_boltbook(contract: str) -> str | None:
     return None
 
 
+def resolve_agent_id(wallet_addr: str) -> dict:
+    """Resolve Agent ID via BAW CLI first, fallback to on-chain Space ID (0x60b9262456de011f7d15a54cdd8c48baaa8b022f)."""
+    # 1. BAW CLI native agent-id
+    try:
+        res = baw("wallet", "agent-id", timeout=15)
+        if isinstance(res, dict) and (res.get("agentId") or res.get("handle") or res.get("domain")):
+            return res
+    except Exception:
+        pass
+
+    # 2. On-chain query fallback for Space ID Agent domain (0x60b9262456de011f7d15a54cdd8c48baaa8b022f)
+    if wallet_addr and wallet_addr.startswith("0x"):
+        space_id_contract = "0x60b9262456de011f7d15a54cdd8c48baaa8b022f"
+        try:
+            # Check if wallet holds Space ID Agent NFT
+            bal_raw = _call(space_id_contract, "0x70a08231" + _pad(wallet_addr))
+            bal = _word(bal_raw, 0)
+            if bal > 0:
+                # Probe tokenOfOwnerByIndex(wallet, 0) -> 0x2f745c59
+                tok_raw = _call(space_id_contract, "0x2f745c59" + _pad(wallet_addr) + ("0" * 64))
+                tid = _word(tok_raw, 0)
+                if tid:
+                    meta = nft_metadata(space_id_contract, tid)
+                    name = meta.get("name") or ""
+                    # Space ID names are like "alice.ai" or "bob"
+                    clean_name = name.split()[0].strip() if name else ""
+                    if clean_name:
+                        return {
+                            "claimed": True,
+                            "handle": clean_name.replace(".ai", ""),
+                            "agentId": clean_name if clean_name.endswith(".ai") else f"{clean_name}.ai",
+                            "onchain": True,
+                        }
+        except Exception:
+            pass
+
+    return {"claimed": False, "handle": None, "agentId": None}
+
+
 def resolve_collection_site(contract_addr: str, token_id: int = 1, metadata_doc: dict | None = None) -> str:
     """Universal automatic resolver for an NFT collection's official site."""
     contract = contract_addr.lower()
@@ -738,7 +777,6 @@ def session():
             except BawError as exc:
                 data["addressError"] = exc.message
             for key, args in (
-                ("agentId", ("wallet", "agent-id")),
                 ("settings", ("wallet", "settings")),
                 ("quota", ("wallet", "left-quota")),
             ):
@@ -746,6 +784,7 @@ def session():
                     data[key] = baw(*args, timeout=30)
                 except BawError as exc:
                     data[key + "Error"] = exc.message
+            data["agentId"] = resolve_agent_id(data.get("primary"))
             settings = data.get("settings") or {}
             # Session lifetime is authoritative on the Binance side; never guess it client-side.
             data["sessionExpiresAt"] = _iso_epoch(settings.get("sessionExpireTime"))
@@ -833,21 +872,22 @@ def overview():
                         except Exception:
                             pass
                 t["icon"] = token_icon(c_addr, t.get("symbol")) or (token_identicon(t.get("symbol") or "?", c_addr) if c_addr else None)
+            out["bscAddress"] = bsc_address(out.get("addresses"))
             out["totalUsd"] = sum(t["value"] for t in out["tokens"])
         except BawError as exc:
             errors.append(f"balance: {exc.message}")
             out["tokens"] = []
             out["totalUsd"] = 0.0
+            out["bscAddress"] = bsc_address(out.get("addresses"))
         for key, args in (
-            ("agentId", ("wallet", "agent-id")),
-            ("quota", ("wallet", "left-quota")),
             ("settings", ("wallet", "settings")),
+            ("quota", ("wallet", "left-quota")),
         ):
             try:
                 out[key] = baw(*args, timeout=30)
             except BawError as exc:
                 errors.append(f"{key}: {exc.message}")
-        out["bscAddress"] = bsc_address(out.get("addresses"))
+        out["agentId"] = resolve_agent_id(out["bscAddress"])
         out["errors"] = errors
         out["fetchedAt"] = datetime.now(timezone.utc).isoformat()
         return out
