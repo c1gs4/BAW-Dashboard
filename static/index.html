@@ -996,7 +996,7 @@ function renderOverview(data) {
   const devOn = !!(data.settings && data.settings.devMode && data.settings.devMode.enabled);
   setChip('chip-devmode', devOn ? 'ok' : 'bad', devOn ? 'Dev mode on' : 'Dev mode off');
 
-  const ranked = [...tokens].sort((a, b) => (b.value || 0) - (a.value || 0));
+  const ranked = [...tokens].sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 5);
   const total = data.totalUsd || 0;
   $('stage-token-count').textContent = `${tokens.length} asset${tokens.length === 1 ? '' : 's'}`;
   $('stage-holdings').innerHTML = ranked.length
@@ -1018,8 +1018,9 @@ function renderOverview(data) {
     ? top.map(t => `<tr><td><div class="sym">${tokenGlyph(t)}<span>${esc(t.symbol || 'unknown')}</span></div></td><td class="num privacy-blur">${esc(num(t.balance))}</td><td class="num privacy-blur">${esc(valueCell(t.price, t.value))}</td></tr>`).join('')
     : '<tr class="empty-row"><td colspan="3">No non-zero token balance on BSC</td></tr>';
 
-  $('tokens-body').innerHTML = tokens.length
-    ? tokens.map(t => `<tr><td><div class="sym">${tokenGlyph(t)}<span>${esc(t.symbol || 'unknown')}${t.name ? `<br><span style="color:var(--muted);font-size:11.5px;font-weight:400">${esc(t.name)}</span>` : ''}</span></div></td><td class="mono wide" style="font-size:12px">${t.contract ? `<a class="hash-link mono" href="https://bscscan.com/token/${esc(t.contract)}" target="_blank" rel="noreferrer" title="View token on BscScan">${esc(shortAddr(t.contract, 8, 6))} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;vertical-align:middle;margin-left:2px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : '--'}</td><td class="num privacy-blur">${esc(num(t.balance))}</td><td class="num privacy-blur">${t.price ? esc(usdSoft(t.price)) : '--'}</td><td class="num privacy-blur">${esc(valueCell(t.price, t.value))}</td></tr>`).join('')
+  const byValue = [...tokens].sort((a, b) => (b.value || 0) - (a.value || 0));
+  $('tokens-body').innerHTML = byValue.length
+    ? byValue.map(t => `<tr><td><div class="sym">${tokenGlyph(t)}<span>${esc(t.symbol || 'unknown')}${t.name ? `<br><span style="color:var(--muted);font-size:11.5px;font-weight:400">${esc(t.name)}</span>` : ''}</span></div></td><td class="mono wide" style="font-size:12px">${t.contract ? `<a class="hash-link mono" href="https://bscscan.com/token/${esc(t.contract)}" target="_blank" rel="noreferrer" title="View token on BscScan">${esc(shortAddr(t.contract, 8, 6))} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;vertical-align:middle;margin-left:2px;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : '--'}</td><td class="num privacy-blur">${esc(num(t.balance))}</td><td class="num privacy-blur">${t.price ? esc(usdSoft(t.price)) : '--'}</td><td class="num privacy-blur">${esc(valueCell(t.price, t.value))}</td></tr>`).join('')
     : '<tr class="empty-row"><td colspan="5">No non-zero token balance on BSC</td></tr>';
   $('tokens-total').textContent = 'Total ' + usd(data.totalUsd);
 

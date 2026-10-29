@@ -25,7 +25,7 @@ from zoneinfo import ZoneInfo
 
 import qrcode
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -216,9 +216,10 @@ def clean_image_uri(image: str) -> str | None:
         return None
     image = image.strip()
     if image.startswith("ipfs://"):
-        return "https://ipfs.filebase.io/ipfs/" + image[7:].replace("ipfs/", "", 1)
-    if "gateway.pinata.cloud/ipfs/" in image:
-        return image.replace("https://gateway.pinata.cloud/ipfs/", "https://ipfs.filebase.io/ipfs/")
+        return "/api/img?u=" + urllib.parse.quote(image, safe="")
+    if "/ipfs/" in image and image.startswith("http"):
+        cid = image.split("/ipfs/", 1)[1].split("?")[0]
+        return "/api/img?u=" + urllib.parse.quote("ipfs://" + cid, safe="")
     if image.startswith("data:image/svg+xml;utf8,") or image.startswith("data:image/svg+xml,"):
         raw_svg = urllib.parse.unquote(image.split(",", 1)[1])
         raw_svg = sanitize_svg(raw_svg)
@@ -1496,6 +1497,38 @@ def nfts(limit: int = Query(60, ge=1, le=100)):
         }
 
     return cached("nfts:" + wallet, 90, load)
+
+
+@app.get("/api/img")
+def img_proxy(u: str = Query(..., max_length=300)):
+    """IPFS gateways return HTML or 403 to browsers. Fetch server-side, refuse non-images."""
+    if not u.startswith("ipfs://"):
+        raise HTTPException(status_code=400, detail="ipfs only")
+    cid_path = u[7:].split("?")[0].strip("/")
+    cid = cid_path.split("/")[0]
+    if not re.fullmatch(r"[A-Za-z0-9]{20,120}", cid) or not re.fullmatch(r"[A-Za-z0-9._/-]{20,240}", cid_path):
+        raise HTTPException(status_code=400, detail="bad cid")
+    gates = (
+        "https://ipfs.filebase.io/ipfs/",
+        "https://gateway.pinata.cloud/ipfs/",
+        "https://dweb.link/ipfs/",
+        "https://w3s.link/ipfs/",
+        "https://ipfs.io/ipfs/",
+    )
+    for gate in gates:
+        try:
+            req = urllib.request.Request(gate + cid_path, headers={"user-agent": "Mozilla/5.0", "accept": "image/*"})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                ctype = (resp.headers.get("content-type") or "").split(";")[0].strip().lower()
+                if not ctype.startswith("image/"):
+                    continue
+                body = resp.read(1_500_000)
+                if not body:
+                    continue
+                return Response(body, media_type=ctype, headers={"cache-control": "public, max-age=86400"})
+        except Exception:
+            continue
+    raise HTTPException(status_code=404, detail="no image")
 
 
 @app.get("/healthz")
