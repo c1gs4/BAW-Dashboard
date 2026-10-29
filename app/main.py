@@ -151,8 +151,8 @@ def _rpc(method: str, params: list, timeout: int = 20) -> object:
     raise BawError("RPC_FAILED", last)
 
 
-def _call(to: str, data: str) -> str:
-    out = _rpc("eth_call", [{"to": to, "data": data}, "latest"])
+def _call(to: str, data: str, timeout: int = 6) -> str:
+    out = _rpc("eth_call", [{"to": to, "data": data}, "latest"], timeout=timeout)
     if not isinstance(out, str):
         raise BawError("RPC_BAD_CALL", str(out)[:200])
     return out
@@ -380,7 +380,7 @@ def resolve_agent_id(wallet_addr: str) -> dict:
     return {"claimed": False, "handle": None, "agentId": None}
 
 
-def resolve_collection_site(contract_addr: str, token_id: int = 1, metadata_doc: dict | None = None) -> str:
+def resolve_collection_site(contract_addr: str, token_id: int = 1, metadata_doc: dict | None = None) -> str | None:
     """Universal automatic resolver for an NFT collection's official site."""
     contract = contract_addr.lower()
 
@@ -424,8 +424,8 @@ def resolve_collection_site(contract_addr: str, token_id: int = 1, metadata_doc:
     if auto_site:
         return auto_site
 
-    # 6. Fallback to direct BscScan contract explorer
-    return f"https://bscscan.com/token/{contract}"
+    # 6. No verified site. Explorer link is a separate field, never a fake site button.
+    return None
 
 
 def jpegai_svg(token_id: int) -> str:
@@ -566,6 +566,77 @@ def nft_metadata(contract: str, token_id: int) -> dict:
     }
 
 
+TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+
+
+def tids_from_receipts(contract: str, wallet: str, hashes: list[str]) -> list[int]:
+    """Recover ERC-721 token IDs from Transfer logs of recent tx receipts.
+
+    Needed for collections that are non-enumerable (tokenOfOwnerByIndex reverts)
+    and whose mint tx only reports one ID for a batch.
+    """
+    c = contract.lower()
+    w = wallet.lower()
+    out: list[int] = []
+
+    def _scan(h):
+        ids = []
+        try:
+            r = _rpc("eth_getTransactionReceipt", [h], timeout=8)
+        except Exception:
+            return ids
+        for lg in (r or {}).get("logs") or []:
+            try:
+                if (lg.get("address") or "").lower() != c:
+                    continue
+                topics = lg.get("topics") or []
+                if len(topics) != 4 or topics[0].lower() != TRANSFER_TOPIC:
+                    continue
+                if ("0x" + topics[2][-40:]).lower() == w:
+                    ids.append(int(topics[3], 16))
+            except Exception:
+                continue
+        return ids
+
+    if hashes:
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            for ids in pool.map(_scan, hashes):
+                for i in ids:
+                    if i not in out:
+                        out.append(i)
+    return out
+
+
+_LOG_CACHE: dict[str, tuple[float, list[str]]] = {}
+
+
+def transfer_contracts(wallet: str, span: int = 60_000) -> list[str]:
+    """Contracts that emitted Transfer to this wallet. 5k-block windows; cached 10 min."""
+    hit = _LOG_CACHE.get(wallet.lower())
+    if hit and time.time() - hit[0] < 600:
+        return hit[1]
+    topic_to = "0x" + wallet.lower().replace("0x", "").rjust(64, "0")
+    latest = int(str(_rpc("eth_blockNumber", [])), 16)
+    found: list[str] = []
+    start = max(0, latest - span)
+    while start <= latest:
+        end = min(start + 4_999, latest)
+        try:
+            logs = _rpc("eth_getLogs", [{
+                "fromBlock": hex(start), "toBlock": hex(end),
+                "topics": [TRANSFER_TOPIC, None, topic_to],
+            }], timeout=12)
+        except Exception:
+            logs = []
+        for lg in logs or []:
+            addr = (lg.get("address") or "").lower()
+            if addr and addr not in found:
+                found.append(addr)
+        start = end + 1
+    _LOG_CACHE[wallet.lower()] = (time.time(), found)
+    return found
+
+
 def erc721_probe(contract: str, wallet: str) -> dict | None:
     """Return collection info when `contract` is ERC-721 and wallet holds some."""
     try:
@@ -616,6 +687,25 @@ def cached(key: str, ttl: int, fn):
     with _CACHE_LOCK:
         _CACHE[key] = (time.time(), value)
     return value
+
+
+def erc20_balance(contract: str, wallet: str) -> dict | None:
+    """Non-zero fungible balance. None when the contract is not a token or balance is 0."""
+    try:
+        raw = _word(_call(contract, "0x70a08231" + _pad(wallet)), 0)
+    except Exception:
+        return None
+    if not raw:
+        return None
+    try:
+        decimals = _word(_call(contract, "0x313ce567"), 0)
+    except Exception:
+        decimals = 18
+    if decimals > 36:
+        return None
+    symbol = _abi_string(_call(contract, "0x95d89b41")) or "TOKEN"
+    name = _abi_string(_call(contract, "0x06fdde03")) or symbol
+    return {"symbol": symbol, "name": name, "contract": contract, "balance": raw / 10 ** decimals, "decimals": decimals}
 
 
 def token_icon(contract: str | None, symbol: str | None) -> str | None:
@@ -712,10 +802,33 @@ def _iso(value) -> str | None:
 
 
 def _scale(raw, decimals) -> float:
+    """BAW amounts are already human ('149', '0.004016'). Only a long digit string is raw wei."""
+    text = str(raw).strip()
     try:
-        return int(str(raw)) / (10 ** int(decimals or 0))
+        if text.isdigit() and len(text) > 12:
+            return int(text) / (10 ** int(decimals or 0))
+        return float(text)
     except (TypeError, ValueError):
         return _num(raw)
+
+
+def classify_tx(row: dict, legs: list[dict]) -> str:
+    """BAW labels unsolicited token receives as `transfer`. Fee paid + fungible in, nothing out = airdrop."""
+    kind = str(_first(row, "txType", "type") or "")
+    if kind != "transfer" or not legs:
+        return kind
+    fee = 0.0
+    for h in row.get("txHashList") or []:
+        nf = h.get("networkFee") or {}
+        try:
+            fee += int(str(nf.get("feeValue") or 0))
+        except ValueError:
+            pass
+    sends = [l for l in legs if l["direction"] == "send"]
+    recvs = [l for l in legs if l["direction"] == "receive"]
+    if fee and recvs and not sends and all(l.get("tokenId") is None and (l.get("decimals") or 0) > 0 for l in recvs):
+        return "airdrop"
+    return kind
 
 
 def normalise_tx(row: dict) -> dict:
@@ -740,13 +853,14 @@ def normalise_tx(row: dict) -> dict:
                         "contract": info.get("contractAddress"),
                         "tokenId": info.get("tokenId"),
                         "amount": _scale(item.get("amount"), info.get("decimals")),
+                        "decimals": info.get("decimals"),
                         "chain": item.get("binanceChainId"),
                     }
                 )
     primary = next((l for l in legs if l["direction"] == "receive"), legs[0] if legs else None)
     return {
         "hash": _first(row, "txHash", "hash"),
-        "type": _first(row, "txType", "type"),
+        "type": classify_tx(row, legs),
         "status": _first(row, "status", "txStatus"),
         "chain": _first(row, "binanceChainId", "chainId"),
         "time": _iso(_first(row, "txTime", "time")),
@@ -939,6 +1053,47 @@ def overview():
                 out[key] = baw(*args, timeout=30)
             except BawError as exc:
                 errors.append(f"{key}: {exc.message}")
+        # Indexer hides dust and unpriced tokens. History legs still name them.
+        known = {(t.get("contract") or "").lower() for t in out["tokens"]}
+        if out.get("bscAddress"):
+            try:
+                hist = baw("wallet", "tx-history", "--size", "100", timeout=40)
+                seen: dict[str, dict] = {}
+                pages = [hist]
+                cursor = hist.get("nextCursor") if isinstance(hist, dict) and hist.get("hasMore") else None
+                for _ in range(2):
+                    if not cursor:
+                        break
+                    nxt = baw("wallet", "tx-history", "--size", "100", "--nextCursor", cursor, timeout=40)
+                    pages.append(nxt)
+                    cursor = nxt.get("nextCursor") if isinstance(nxt, dict) and nxt.get("hasMore") else None
+                for tx in (r for page in pages for r in tx_rows(page)):
+                    for h in tx.get("txHashList") or []:
+                        for item in (h.get("instructions") or {}).get("receive") or []:
+                            info = item.get("tokenInfo") or {}
+                            c = (info.get("contractAddress") or "").lower()
+                            if (
+                                c.startswith("0x") and len(c) == 42 and c not in known
+                                and info.get("tokenId") is None and int(info.get("decimals") or 0) > 0
+                            ):
+                                seen.setdefault(c, info)
+            except Exception:
+                seen = {}
+
+            def _add(item):
+                c, info = item
+                row = erc20_balance(c, out["bscAddress"])
+                if not row:
+                    return None
+                row.update(chain="56", price=0, value=0,
+                           icon=token_icon(c, row["symbol"]) or token_identicon(row["symbol"], c))
+                return row
+
+            with ThreadPoolExecutor(max_workers=8) as pool:
+                for row in pool.map(_add, list(seen.items())[:40]):
+                    if row:
+                        out["tokens"].append(row)
+        out["totalUsd"] = sum(t["value"] for t in out["tokens"])
         out["agentId"] = resolve_agent_id(out["bscAddress"])
         out["errors"] = errors
         out["fetchedAt"] = datetime.now(timezone.utc).isoformat()
@@ -1018,15 +1173,27 @@ def nfts(limit: int = Query(60, ge=1, le=100)):
 
     def load():
         try:
-            payload = baw("wallet", "tx-history", "--size", str(limit), timeout=60)
-            raw_tx_list = tx_rows(payload)
-            history = [normalise_tx(r) for r in raw_tx_list]
+            raw_tx_list = []
+            cursor = None
+            for _ in range(4):
+                args = ["wallet", "tx-history", "--size", "100"]
+                if cursor:
+                    args += ["--nextCursor", cursor]
+                payload = baw(*args, timeout=60)
+                raw_tx_list += tx_rows(payload)
+                cursor = payload.get("nextCursor") if payload.get("hasMore") else None
+                if not cursor:
+                    break
         except BawError:
-            raw_tx_list, history = [], []
+            raw_tx_list = []
         candidates: dict[str, None] = {}
         tokens_map: dict[str, list[int]] = {}
+        tx_hashes: list[str] = []
         for tx in raw_tx_list:
             for hl in tx.get("txHashList", []):
+                h = hl.get("txHash")
+                if h and h not in tx_hashes:
+                    tx_hashes.append(h)
                 inst = hl.get("instructions", {})
                 for d in ("receive", "send"):
                     for item in inst.get(d, []):
@@ -1054,7 +1221,10 @@ def nfts(limit: int = Query(60, ge=1, le=100)):
 
         probes: list[tuple[str, dict]] = []
         errors: list[str] = []
-        cand_list = list(candidates)[:24]
+        cand_list = list(candidates)
+        for addr in KNOWN_COLLECTION_TOKENS:
+            if addr.lower() not in {c.lower() for c in cand_list}:
+                cand_list.append(addr)
         with ThreadPoolExecutor(max_workers=16) as pool:
             for c, info in pool.map(_check_cand, cand_list):
                 if info:
@@ -1094,9 +1264,32 @@ def nfts(limit: int = Query(60, ge=1, le=100)):
                                     pass
                         if len(tids) >= bal:
                             break
+                # 3. Recover IDs from Transfer logs (non-enumerable + batch mint)
+                if len(tids) < bal and tx_hashes:
+                    try:
+                        for cand in tids_from_receipts(contract, wallet, tx_hashes):
+                            if cand in tids:
+                                continue
+                            try:
+                                owner_raw = _call(contract, "0x6352211e" + hex(cand)[2:].zfill(64))
+                                if owner_raw and ("0x" + owner_raw[-40:]).lower() == wallet.lower():
+                                    tids.append(cand)
+                                    if len(tids) >= bal:
+                                        break
+                            except Exception:
+                                continue
+                    except Exception:
+                        pass
             items = []
-            for tid in tids:
-                meta = cached(f"nftmeta:{contract}:{tid}", 3600, lambda: nft_metadata(contract, tid))
+            # Fetch token metadata in parallel so slow gateways don't serialize
+            def _meta(tid):
+                return cached(f"nftmeta:{contract}:{tid}", 3600, lambda: nft_metadata(contract, tid))
+
+            metas: list[dict] = []
+            if tids:
+                with ThreadPoolExecutor(max_workers=min(8, len(tids))) as mp:
+                    metas = list(mp.map(_meta, tids))
+            for tid, meta in zip(tids, metas):
                 items.append({
                     "tokenId": tid,
                     "name": meta.get("name") or f"{info['name']} #{tid}",
@@ -1116,7 +1309,7 @@ def nfts(limit: int = Query(60, ge=1, le=100)):
                 futures = [pool.submit(enrich, item) for item in probes]
                 for fut in futures:
                     try:
-                        col = fut.result(timeout=25)
+                        col = fut.result(timeout=90)
                         col["status"] = "hold"
                         collections.append(col)
                     except Exception as exc:  # noqa: BLE001

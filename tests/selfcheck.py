@@ -47,11 +47,29 @@ tx = normalise_tx({
     }],
 })
 assert tx["symbol"] == "HASH" and tx["tokenId"] == "4179" and tx["amount"] == 1.0
-assert tx["direction"] == "receive"
-assert abs(tx["fee"]["amount"] - 2.6952820615624e-05) < 1e-15 and tx["fee"]["symbol"] == "BNB"
+assert tx["direction"] == "receive" and tx["type"] == "transfer"  # NFT receive stays a transfer
+assert abs(tx["fee"]["amount"] - 26952820615624 / 1e18) < 1e-15 and tx["fee"]["symbol"] == "BNB"
 assert datetime.fromisoformat(tx["time"]).tzinfo is not None
 # BAW never reports per-tx USD value: it must stay null, not 0.0 or a guess
 assert tx["valueUsd"] is None
+
+# unsolicited fungible receive (fee paid, nothing sent) is an airdrop, not a transfer
+drop = normalise_tx({
+    "txType": "transfer", "txHash": "0xcc", "status": "confirmed",
+    "txHashList": [{
+        "networkFee": {"feeTokenSymbol": "BNB", "feeValue": "1050000000000", "feeTokenDecimals": 18},
+        "instructions": {"send": [], "receive": [
+            {"amount": "149", "tokenInfo": {"contractAddress": "0xSo", "symbol": "SOLO", "decimals": 18}}]},
+    }],
+})
+assert drop["type"] == "airdrop" and drop["amount"] == 149 and drop["legs"][0]["decimals"] == 18
+# a real send stays a transfer
+sent = normalise_tx({
+    "txType": "transfer", "txHash": "0xdd",
+    "txHashList": [{"networkFee": {"feeValue": "1"}, "instructions": {
+        "send": [{"amount": "1", "tokenInfo": {"symbol": "BNB", "decimals": 18}}], "receive": []}}],
+})
+assert sent["type"] == "transfer"
 
 # empty instructions must not crash and must not invent legs
 empty = normalise_tx({"txType": "contract_call", "txHash": "0xbb", "status": "failed",

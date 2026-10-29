@@ -1769,7 +1769,8 @@ window.openNftModal = function(contract) {
   if (!collection) return;
   const items = collection.items || [];
   $('modal-title').textContent = collection.name || 'Collection NFTs';
-  $('modal-site').href = collection.site || `https://bscscan.com/token/${collection.contract}`;
+  $('modal-site').hidden = !collection.site;
+  $('modal-site').href = collection.site || '#';
   $('modal-sub').textContent = `${items.length} NFT${items.length === 1 ? '' : 's'} held · ${shortAddr(collection.contract, 10, 8)}`;
   
   $('modal-grid').innerHTML = items.length ? items.map(item => {
