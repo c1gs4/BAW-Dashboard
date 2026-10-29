@@ -912,12 +912,19 @@ def activity(limit: int = Query(25, ge=1, le=100), cursor: str | None = None):
 @app.get("/api/nfts")
 def nfts(limit: int = Query(60, ge=1, le=100)):
     """Collections the wallet actually holds, verified on-chain."""
-    wallet = "0x64b861Be5C96b8247C5d13CB21e98aeb0a37E74D"
+    st = wallet_status()
+    if not st.get("connected"):
+        return {"wallet": None, "collections": [], "heldCount": 0, "soldCount": 0, "totalCount": 0, "scanned": 0, "errors": ["not_connected"]}
+    try:
+        addr_payload = baw("wallet", "address", timeout=30)
+        wallet = bsc_address(addr_payload.get("addresses") or addr_payload.get("list") or []) or ""
+    except Exception:
+        wallet = ""
+
+    if not wallet:
+        return {"wallet": None, "collections": [], "heldCount": 0, "soldCount": 0, "totalCount": 0, "scanned": 0, "errors": ["wallet_not_found"]}
 
     def load():
-        st = wallet_status()
-        if not st.get("connected"):
-            return {"wallet": wallet, "collections": [], "heldCount": 0, "soldCount": 0, "totalCount": 0, "scanned": 0, "errors": ["not_connected"]}
         try:
             payload = baw("wallet", "tx-history", "--size", str(limit), timeout=60)
             raw_tx_list = tx_rows(payload)
@@ -925,7 +932,7 @@ def nfts(limit: int = Query(60, ge=1, le=100)):
         except BawError:
             raw_tx_list, history = [], []
         candidates: dict[str, None] = {}
-        tokens_map: dict[str, list[int]] = {k: list(v) for k, v in KNOWN_COLLECTION_TOKENS.items()}
+        tokens_map: dict[str, list[int]] = {}
         for tx in raw_tx_list:
             for hl in tx.get("txHashList", []):
                 inst = hl.get("instructions", {})

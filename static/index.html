@@ -500,7 +500,7 @@
         <div class="pnl-card-tokens" id="pnl-art-tokens"></div>
 
         <div class="pnl-card-bot">
-          <span class="mono" id="pnl-art-wallet">xieball.ai</span>
+          <span class="mono" id="pnl-art-wallet">--</span>
           <span style="font-size:10.5px;color:#F0B90B;font-weight:600;">Verified on-chain · BSC Mainnet</span>
         </div>
       </div>
@@ -1479,8 +1479,8 @@ window.openPnlModal = function(contract) {
   $('pnl-art-net').style.color = isPos ? '#8ab86b' : '#F0B90B';
   const ov = state.overview || {};
   const ag = ov.agentId || {};
-  const agentDisplay = ag.agentId || ag.handle || ag.domain || 'xieball.ai';
-  $('pnl-art-wallet').textContent = agentDisplay.endsWith('.ai') ? agentDisplay : `${agentDisplay}.ai`;
+  const agentDisplay = ag.agentId || ag.handle || ag.domain || shortAddr(ov.bscAddress, 8, 6);
+  $('pnl-art-wallet').textContent = agentDisplay.includes('.') || agentDisplay.startsWith('0x') ? agentDisplay : `${agentDisplay}.ai`;
 
   const tokens = pnl.tokens || [];
   $('pnl-art-tokens').innerHTML = tokens.length ? tokens.map(t => {
@@ -1664,8 +1664,8 @@ function generatePnlCanvas() {
   ctx.font = '24px monospace, sans-serif';
   const ov = state.overview || {};
   const ag = ov.agentId || {};
-  const agentDisplay = ag.agentId || ag.handle || ag.domain || 'xieball.ai';
-  const agentTag = agentDisplay.endsWith('.ai') ? agentDisplay : `${agentDisplay}.ai`;
+  const agentDisplay = ag.agentId || ag.handle || ag.domain || shortAddr(ov.bscAddress, 8, 6);
+  const agentTag = agentDisplay.includes('.') || agentDisplay.startsWith('0x') ? agentDisplay : `${agentDisplay}.ai`;
   ctx.fillText(`Agent: ${agentTag}`, 80, 1022);
 
   ctx.fillStyle = '#F0B90B';
@@ -1710,8 +1710,8 @@ function copyFallbackText() {
   const isPos = (pnl.netUsd || 0) > 0;
   const ov = state.overview || {};
   const ag = ov.agentId || {};
-  const agentDisplay = ag.agentId || ag.handle || ag.domain || 'xieball.ai';
-  const agentTag = agentDisplay.endsWith('.ai') ? agentDisplay : `${agentDisplay}.ai`;
+  const agentDisplay = ag.agentId || ag.handle || ag.domain || shortAddr(ov.bscAddress, 8, 6);
+  const agentTag = agentDisplay.includes('.') || agentDisplay.startsWith('0x') ? agentDisplay : `${agentDisplay}.ai`;
   const text = `🏆 NFT Realized PnL: ${col.name} (${col.symbol})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💰 Net Realized Profit: ${isPos ? '+' : ''}$${pnl.netUsd.toFixed(2)} USDT (${pnl.roiPercent > 0 ? '+' : ''}${pnl.roiPercent}% ROI)
