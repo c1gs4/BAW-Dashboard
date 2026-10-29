@@ -815,7 +815,7 @@ def session():
             data["serverNow"] = time.time()
         return data
 
-    return cached("session", 15, load)
+    return cached("session", 5, load)
 
 
 @app.post("/api/login")
@@ -944,7 +944,7 @@ def overview():
         out["fetchedAt"] = datetime.now(timezone.utc).isoformat()
         return out
 
-    return cached("overview", 20, load)
+    return cached("overview", 5, load)
 
 
 @app.get("/api/update/check")

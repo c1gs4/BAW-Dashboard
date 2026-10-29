@@ -974,7 +974,7 @@ function setChip(id, okState, label) {
 function renderOverview(data) {
   state.overview = data;
   const tokens = data.tokens || [];
-  $('total-usd').textContent = tokens.length ? usd(data.totalUsd) : '$0.00';
+  $('total-usd').textContent = data.totalUsd > 0 ? usd(data.totalUsd) : (tokens.length ? usd(data.totalUsd) : '$0.00');
   $('total-usd').classList.remove('empty-val');
   $('token-count').textContent = `${tokens.length} token${tokens.length === 1 ? '' : 's'}`;
   const primary = (data.addresses || []).find(a => Number(a.binanceChainId) === 56) || (data.addresses || [])[0];
@@ -985,7 +985,23 @@ function renderOverview(data) {
   const agentName = data.agentId && (data.agentId.agentId || data.agentId.handle || data.agentId.domain || data.agentId.name);
   const displayAgent = agentName ? (agentName.endsWith('.ai') ? agentName : `${agentName}.ai`) : null;
   $('handle-label').textContent = displayAgent || 'session';
-  setChip('chip-agent', displayAgent ? 'ok' : 'warn', displayAgent ? `Agent ID ${displayAgent}` : 'Agent ID not claimed');
+  // Also sync agent ID from NFTs if overview missed it
+  if (!displayAgent && state.nfts && state.nfts.collections) {
+    const spaceIdCol = state.nfts.collections.find(c =>
+      (c.contract || '').toLowerCase() === '0x60b9262456de011f7d15a54cdd8c48baaa8b022f' ||
+      (c.name || '').toLowerCase().includes('space id') ||
+      (c.name || '').toLowerCase().includes('.ai')
+    );
+    if (spaceIdCol && spaceIdCol.items && spaceIdCol.items.length) {
+      const itName = spaceIdCol.items[0].name || '';
+      const cleanIt = itName.split(' ')[0].trim();
+      if (cleanIt) {
+        const foundAgent = cleanIt.endsWith('.ai') ? cleanIt : `${cleanIt}.ai`;
+        $('handle-label').textContent = foundAgent;
+        setChip('chip-agent', 'ok', `Agent ID ${foundAgent}`);
+      }
+    }
+  }
   const quota = data.quota || {};
   const left = quota.quotaLeft ?? quota.leftQuota ?? quota.remaining;
   const limit = quota.dailyLimit;
@@ -1148,6 +1164,25 @@ function renderNfts(data) {
     : `<section class="panel" style="grid-column:1/-1"><div class="empty-row" style="color:var(--muted);text-align:center;padding:24px">No ${esc(currentFilter)} collections found for this wallet</div></section>`;
 
   renderOverviewNftRow(all);
+
+  // Cross-pollinate Agent ID from detected Space ID collection if still showing fallback
+  const agentChipText = $('chip-agent') ? $('chip-agent').textContent : '';
+  if (agentChipText.includes('--') || agentChipText.includes('not claimed')) {
+    const spaceIdCol = all.find(c =>
+      (c.contract || '').toLowerCase() === '0x60b9262456de011f7d15a54cdd8c48baaa8b022f' ||
+      (c.name || '').toLowerCase().includes('space id') ||
+      (c.name || '').toLowerCase().includes('.ai')
+    );
+    if (spaceIdCol && spaceIdCol.items && spaceIdCol.items.length) {
+      const itName = spaceIdCol.items[0].name || '';
+      const cleanIt = itName.split(' ')[0].trim();
+      if (cleanIt) {
+        const foundAgent = cleanIt.endsWith('.ai') ? cleanIt : `${cleanIt}.ai`;
+        $('handle-label').textContent = foundAgent;
+        setChip('chip-agent', 'ok', `Agent ID ${foundAgent}`);
+      }
+    }
+  }
 }
 
 function renderOverviewNftRow(allCols) {
